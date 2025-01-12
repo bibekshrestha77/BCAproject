@@ -1,0 +1,215 @@
+/* Candidate Table Specific Styles */
+.candidate-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.candidate-table th {
+    background-color: #f8f9fa;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.candidate-table td {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+/* Candidate Photo Styles */
+.candidate-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.candidate-photo-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 20px;
+}
+
+/* Candidate Form Styles */
+.candidate-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.photo-upload-area {
+    border: 2px dashed #ddd;
+    padding: 30px;
+    text-align: center;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.photo-upload-area:hover {
+    border-color: #4CAF50;
+    background-color: #f9f9f9;
+}
+
+.photo-upload-area i {
+    font-size: 40px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.photo-preview {
+    max-width: 200px;
+    margin: 10px auto;
+    display: none;
+}
+
+.photo-preview img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+/* Candidate Modal Specific Styles */
+#addCandidateModal .modal-content {
+    max-width: 700px;
+}
+
+.bio-field {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.election-select {
+    background-color: white;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    width: 100%;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.election-select:focus {
+    border-color: #4CAF50;
+    outline: none;
+}
+
+/* Action Buttons */
+.candidate-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-edit, .btn-delete {
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    background: #3498db;
+}
+
+.btn-edit:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    background: #e74c3c;
+}
+
+.btn-delete:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+}
+
+/* Status Badge */
+.votes-badge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Form Field Animations */
+.form-group input,
+.form-group textarea,
+.form-group select {
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .candidate-table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .candidate-photo,
+    .candidate-photo-placeholder {
+        width: 40px;
+        height: 40px;
+    }
+
+    .candidate-actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .btn-edit,
+    .btn-delete {
+        text-align: center;
+    }
+
+    .photo-upload-area {
+        padding: 15px;
+    }
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+} 

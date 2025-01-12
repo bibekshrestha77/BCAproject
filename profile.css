@@ -1,0 +1,232 @@
+/* Profile Container */
+.profile-container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Profile Header Section */
+.profile-header {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 50px 20px;
+    text-align: center;
+    position: relative;
+}
+
+.profile-avatar {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    margin-bottom: 15px;
+    transition: transform 0.3s ease;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.05);
+}
+
+.profile-header h2 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.profile-header p {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+/* Profile Content Section */
+.profile-content {
+    padding: 30px;
+}
+
+.profile-content h3 {
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+/* Voting History Section */
+.voting-history {
+    margin-top: 20px;
+}
+
+.vote-card {
+    background: #f8f9fa;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vote-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.vote-card h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.vote-card p {
+    color: #555;
+    margin: 5px 0;
+}
+
+.vote-date {
+    color: #888;
+    font-size: 0.9em;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.vote-date i {
+    margin-right: 5px;
+}
+
+/* No Votes Message */
+.no-votes {
+    text-align: center;
+    color: #666;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+/* Profile Stats */
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 15px;
+}
+
+.stat-card h4 {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.stat-card p {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Profile Actions */
+.profile-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.edit-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #45a049;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-container {
+        margin: 20px;
+        border-radius: 8px;
+    }
+
+    .profile-header {
+        padding: 30px 15px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-content {
+        padding: 20px;
+    }
+
+    .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .vote-card {
+        padding: 15px;
+    }
+}
+
+/* Loading State */
+.profile-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.profile-loading::after {
+    content: '';
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.profile-error {
+    text-align: center;
+    padding: 30px;
+    color: #dc3545;
+    background: #fff;
+    border-radius: 8px;
+    margin: 20px;
+}
+
+/* Success Messages */
+.profile-success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+} 
