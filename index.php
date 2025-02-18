@@ -60,7 +60,7 @@ include 'config.php';
 
 <body>
     <nav class="navbar">
-        <div class="logo">VoteSystem</div>
+        <div class="logo">Voting System</div>
         <div class="nav-buttons">
             <?php if (!isset($_SESSION['user_id'])): ?>
                 <a href="login.php" class="nav-btn">Login</a>
