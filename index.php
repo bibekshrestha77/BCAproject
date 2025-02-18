@@ -1,9 +1,13 @@
 <?php
 session_start();
 include 'config.php';
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +36,7 @@ include 'config.php';
             right: 0;
             background-color: #f9f9f9;
             min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
             z-index: 1;
             border-radius: 5px;
         }
@@ -53,11 +57,12 @@ include 'config.php';
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="logo">VoteSystem</div>
         <div class="nav-buttons">
-            <?php if(!isset($_SESSION['user_id'])): ?>
+            <?php if (!isset($_SESSION['user_id'])): ?>
                 <a href="login.php" class="nav-btn">Login</a>
                 <a href="register.php" class="nav-btn">Register</a>
             <?php else: ?>
@@ -75,7 +80,7 @@ include 'config.php';
         </div>
     </nav>
 
-    <?php if(isset($_SESSION['vote_success'])): ?>
+    <?php if (isset($_SESSION['vote_success'])): ?>
         <div class="alert success-alert">
             <div class="alert-content">
                 <i class="fas fa-check-circle"></i>
@@ -86,7 +91,7 @@ include 'config.php';
         <?php unset($_SESSION['vote_success']); ?>
     <?php endif; ?>
 
-    <?php if(isset($_SESSION['vote_error'])): ?>
+    <?php if (isset($_SESSION['vote_error'])): ?>
         <div class="alert error-alert">
             <div class="alert-content">
                 <i class="fas fa-exclamation-circle"></i>
@@ -106,7 +111,7 @@ include 'config.php';
         <h2>Available Elections</h2>
         <div class="election-cards">
             <?php
-            if(isset($_SESSION['user_id'])) {
+            if (isset($_SESSION['user_id'])) {
                 // Get elections excluding ones user has already voted in
                 $user_id = $_SESSION['user_id'];
                 $query = "SELECT e.* 
@@ -122,27 +127,27 @@ include 'config.php';
                 // If user not logged in, show all active elections
                 $query = "SELECT * FROM elections WHERE status='active' ORDER BY end_date ASC";
             }
-            
+
             $result = mysqli_query($conn, $query);
-            
-            if(mysqli_num_rows($result) > 0) {
-                while($row = mysqli_fetch_assoc($result)) {
+
+            if (mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
                     $end_date = strtotime($row['end_date']);
                     $now = time();
                     $time_left = $end_date - $now;
-                    
-                    if($time_left > 0) {
+
+                    if ($time_left > 0) {
                         echo "<div class='election-card'>";
                         echo "<span class='status active'>Active</span>";
                         echo "<h3>{$row['title']}</h3>";
                         echo "<p>{$row['description']}</p>";
-                        
+
                         // Format remaining time
                         $days = floor($time_left / (60 * 60 * 24));
                         $hours = floor(($time_left % (60 * 60 * 24)) / (60 * 60));
                         echo "<p class='date'>Ends in: {$days}d {$hours}h</p>";
-                        
-                        if(isset($_SESSION['user_id'])) {
+
+                        if (isset($_SESSION['user_id'])) {
                             echo "<a href='vote.php?id={$row['id']}' class='vote-btn'>Vote Now</a>";
                         } else {
                             echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
@@ -153,7 +158,7 @@ include 'config.php';
             } else {
                 echo "<div class='no-elections'>";
                 echo "<i class='fas fa-check-circle'></i>";
-                if(isset($_SESSION['user_id'])) {
+                if (isset($_SESSION['user_id'])) {
                     echo "<p>You have voted in all available elections!</p>";
                     echo "<a href='profile.php' class='view-history-btn'>View Your Voting History</a>";
                 } else {
@@ -219,32 +224,33 @@ include 'config.php';
     </footer>
 
     <script>
-    // Auto-hide alerts after 5 seconds
-    document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5500); // 5.5 seconds (allowing for fade animation)
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 5500); // 5.5 seconds (allowing for fade animation)
+            });
         });
-    });
 
-    function toggleProfileDropdown() {
-        document.getElementById("profileDropdown").classList.toggle("show");
-    }
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
 
-    // Close the dropdown if the user clicks outside of it
-    window.onclick = function(event) {
-        if (!event.target.matches('.profile-icon')) {
-            var dropdowns = document.getElementsByClassName("profile-dropdown");
-            for (var i = 0; i < dropdowns.length; i++) {
-                var openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
+        // Close the dropdown if the user clicks outside of it
+        window.onclick = function (event) {
+            if (!event.target.matches('.profile-icon')) {
+                var dropdowns = document.getElementsByClassName("profile-dropdown");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
                 }
             }
         }
-    }
     </script>
 </body>
-</html> 
+
+</html>

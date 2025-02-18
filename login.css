@@ -190,8 +190,5 @@ button[type="submit"].loading::after {
     animation: loading 1.5s infinite;
 }
 
-@keyframes loading {
-    100% {
-        left: 100%;
-    }
-}
+
+
