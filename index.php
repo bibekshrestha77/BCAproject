@@ -111,58 +111,76 @@ include 'config.php';
         <h2>Available Elections</h2>
         <div class="election-cards">
             <?php
+            $current_date = date('Y-m-d H:i:s');
+
             if (isset($_SESSION['user_id'])) {
                 // Get elections excluding ones user has already voted in
                 $user_id = $_SESSION['user_id'];
-                $query = "SELECT e.* 
-                         FROM elections e 
-                         WHERE e.status='active' 
-                         AND e.id NOT IN (
-                             SELECT election_id 
-                             FROM votes 
-                             WHERE user_id = $user_id
-                         )
-                         ORDER BY e.end_date ASC";
+                $query = "SELECT e.*, 
+              CASE 
+                  WHEN '$current_date' >= e.start_date AND '$current_date' <= e.end_date THEN 'active'
+                  WHEN '$current_date' > e.end_date THEN 'completed'
+                  ELSE 'upcoming'
+              END AS status
+              FROM elections e
+              WHERE e.id NOT IN (
+                  SELECT election_id 
+                  FROM votes 
+                  WHERE user_id = $user_id
+              )
+              HAVING status = 'active'
+              ORDER BY e.end_date ASC";
             } else {
                 // If user not logged in, show all active elections
-                $query = "SELECT * FROM elections WHERE status='active' ORDER BY end_date ASC";
+                $query = "SELECT *, 
+              CASE 
+                  WHEN '$current_date' >= start_date AND '$current_date' <= end_date THEN 'active'
+                  WHEN '$current_date' > end_date THEN 'completed'
+                  ELSE 'upcoming'
+              END AS status
+              FROM elections
+              HAVING status = 'active'
+              ORDER BY end_date ASC";
             }
 
             $result = mysqli_query($conn, $query);
+            
+
+
 
             if (mysqli_num_rows($result) > 0) {
-                while ($row = mysqli_fetch_assoc($result)) {
-                    $end_date = strtotime($row['end_date']);
-                    $now = time();
-                    $time_left = $end_date - $now;
+            while ($row = mysqli_fetch_assoc($result)) {
+            $end_date = strtotime($row['end_date']);
+            $now = time();
+            $time_left = $end_date - $now;
 
-                    if ($time_left > 0) {
-                        echo "<div class='election-card'>";
-                        echo "<span class='status active'>Active</span>";
-                        echo "<h3>{$row['title']}</h3>";
-                        echo "<p>{$row['description']}</p>";
+            if ($time_left > 0) {
+            echo "<div class='election-card'>";
+                echo "<span class='status active'>Active</span>";
+                echo "<h3>{$row['title']}</h3>";
+                echo "<p>{$row['description']}</p>";
 
-                        // Format remaining time
-                        $days = floor($time_left / (60 * 60 * 24));
-                        $hours = floor(($time_left % (60 * 60 * 24)) / (60 * 60));
-                        echo "<p class='date'>Ends in: {$days}d {$hours}h</p>";
+                // Format remaining time
+                $days = floor($time_left / (60 * 60 * 24));
+                $hours = floor(($time_left % (60 * 60 * 24)) / (60 * 60));
+                echo "<p class='date'>Ends in: {$days}d {$hours}h</p>";
 
-                        if (isset($_SESSION['user_id'])) {
-                            echo "<a href='vote.php?id={$row['id']}' class='vote-btn'>Vote Now</a>";
-                        } else {
-                            echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
-                        }
-                        echo "</div>";
-                    }
+                if (isset($_SESSION['user_id'])) {
+                echo "<a href='vote.php?id={$row[' id']}' class='vote-btn'>Vote Now</a>";
+                } else {
+                echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
                 }
+                echo "</div>";
+            }
+            }
             } else {
-                echo "<div class='no-elections'>";
+            echo "<div class='no-elections'>";
                 echo "<i class='fas fa-check-circle'></i>";
                 if (isset($_SESSION['user_id'])) {
-                    echo "<p>You have voted in all available elections!</p>";
-                    echo "<a href='profile.php' class='view-history-btn'>View Your Voting History</a>";
+                echo "<p>You have voted in all available elections!</p>";
+                echo "<a href='profile.php' class='view-history-btn'>View Your Voting History</a>";
                 } else {
-                    echo "<p>No active elections at the moment.</p>";
+                echo "<p>No active elections at the moment.</p>";
                 }
                 echo "</div>";
             }
