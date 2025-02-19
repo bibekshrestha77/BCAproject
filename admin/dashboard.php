@@ -10,11 +10,23 @@ $stats = [
     'total_votes' => mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM votes"))['count']
 ];
 
-// Get recent elections
-$recent_elections = mysqli_query($conn, "SELECT * FROM elections ORDER BY created_at DESC LIMIT 5");
+$current_date = date('Y-m-d H:i:s');
+$recent_elections = mysqli_query(
+    $conn,
+    "SELECT *, 
+        CASE 
+            WHEN '$current_date' >= start_date AND '$current_date' <= end_date THEN 'active'
+            WHEN '$current_date' > end_date THEN 'completed'
+            ELSE 'upcoming'
+        END AS status
+     FROM elections 
+     ORDER BY created_at DESC 
+     LIMIT 5"
+);
 
 // Get recent votes
-$recent_votes = mysqli_query($conn, 
+$recent_votes = mysqli_query(
+    $conn,
     "SELECT v.*, u.username, e.title as election_title, c.name as candidate_name 
      FROM votes v 
      JOIN users u ON v.user_id = u.id 
@@ -26,6 +38,7 @@ $recent_votes = mysqli_query($conn,
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,6 +46,7 @@ $recent_votes = mysqli_query($conn,
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
+
 <body>
     <div class="admin-container">
         <!-- Sidebar -->
@@ -134,16 +148,16 @@ $recent_votes = mysqli_query($conn,
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php while($election = mysqli_fetch_assoc($recent_elections)): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($election['title']); ?></td>
-                                    <td>
-                                        <span class="status-badge <?php echo $election['status']; ?>">
-                                            <?php echo ucfirst($election['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo date('M d, Y', strtotime($election['end_date'])); ?></td>
-                                </tr>
+                                <?php while ($election = mysqli_fetch_assoc($recent_elections)): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($election['title']); ?></td>
+                                        <td>
+                                            <span class="status-badge <?php echo $election['status']; ?>">
+                                                <?php echo ucfirst($election['status']); ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo date('M d, Y', strtotime($election['end_date'])); ?></td>
+                                    </tr>
                                 <?php endwhile; ?>
                             </tbody>
                         </table>
@@ -167,13 +181,13 @@ $recent_votes = mysqli_query($conn,
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php while($vote = mysqli_fetch_assoc($recent_votes)): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($vote['username']); ?></td>
-                                    <td><?php echo htmlspecialchars($vote['election_title']); ?></td>
-                                    <td><?php echo htmlspecialchars($vote['candidate_name']); ?></td>
-                                    <td><?php echo date('M d, H:i', strtotime($vote['voted_at'])); ?></td>
-                                </tr>
+                                <?php while ($vote = mysqli_fetch_assoc($recent_votes)): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($vote['username']); ?></td>
+                                        <td><?php echo htmlspecialchars($vote['election_title']); ?></td>
+                                        <td><?php echo htmlspecialchars($vote['candidate_name']); ?></td>
+                                        <td><?php echo date('M d, H:i', strtotime($vote['voted_at'])); ?></td>
+                                    </tr>
                                 <?php endwhile; ?>
                             </tbody>
                         </table>
@@ -183,4 +197,5 @@ $recent_votes = mysqli_query($conn,
         </div>
     </div>
 </body>
-</html> 
+
+</html>

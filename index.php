@@ -166,7 +166,7 @@ include 'config.php';
                 echo "<p class='date'>Ends in: {$days}d {$hours}h</p>";
 
                 if (isset($_SESSION['user_id'])) {
-                echo "<a href='vote.php?id={$row[' id']}' class='vote-btn'>Vote Now</a>";
+                echo "<a href='vote.php?id={$row['id']}' class='vote-btn'>Vote Now</a>";
                 } else {
                 echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
                 }

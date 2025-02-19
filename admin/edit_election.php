@@ -26,6 +26,16 @@ if (isset($_POST['update_election'])) {
     if (strtotime($end_date) <= strtotime($start_date)) {
         $_SESSION['error'] = "End date must be after start date";
     } else {
+             // Calculate status based on current date
+        $current_date = date('Y-m-d H:i:s');
+        $status = 'upcoming'; // Default status
+
+        if ($current_date >= $start_date && $current_date <= $end_date) {
+            $status = 'active';
+        } elseif ($current_date > $end_date) {
+            $status = 'completed';
+        }
+
         $query = "UPDATE elections 
                   SET title = '$title', 
                       description = '$description', 

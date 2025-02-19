@@ -83,16 +83,21 @@ if (isset($_GET['delete'])) {
     exit();
 }
 
-//election statuses dynamically 
+// Update election statuses based on current date
 $current_date = date('Y-m-d H:i:s');
-$sql = "SELECT *, 
-        CASE 
-            WHEN '$current_date' >= start_date AND '$current_date' <= end_date THEN 'active'
-            WHEN '$current_date' > end_date THEN 'completed'
-            ELSE 'upcoming'
-        END AS status
-        FROM elections
-        ORDER BY created_at DESC";
+$update_status_query = "
+    UPDATE elections 
+    SET status = CASE 
+        WHEN '$current_date' >= start_date AND '$current_date' <= end_date THEN 'active'
+        WHEN '$current_date' > end_date THEN 'completed'
+        ELSE 'upcoming'
+    END
+";
+mysqli_query($conn, $update_status_query);
+
+
+// Fetch elections with updated statuses
+$sql = "SELECT * FROM elections ORDER BY created_at DESC";
 $elections = mysqli_query($conn, $sql);
 
 // Start output buffering
