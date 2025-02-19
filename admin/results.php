@@ -87,20 +87,10 @@ ob_start();
                     <span>Started: <?php echo date('M d, Y', strtotime($election['start_date'])); ?></span>
                     <span>Ended: <?php echo date('M d, Y', strtotime($election['end_date'])); ?></span>
                 </div>
-                <button class="export-btn" onclick="exportResults(<?php echo $election['id']; ?>)">
-                    <i class="fas fa-download"></i> Export Results
-                </button>
             </div>
         </div>
     <?php endwhile; ?>
 </div>
-
-<script>
-function exportResults(electionId) {
-    // Implement PDF or Excel export functionality
-    window.location.href = 'export_results.php?election_id=' + electionId;
-}
-</script>
 
 <?php
 $content = ob_get_clean();
