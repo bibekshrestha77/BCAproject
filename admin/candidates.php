@@ -395,7 +395,7 @@ tr:hover {
                         <td><?php echo htmlspecialchars($row['position']); ?></td>
                         <td><?php echo htmlspecialchars($row['election_name']); ?></td>
                         <td class="actions">
-                            <a href="edit-candidate.php?id=<?php echo $row['id']; ?>" class="btn-edit">
+                            <a href="edit_candidate.php?id=<?php echo $row['id']; ?>" class="btn-edit">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <a href="candidates.php?delete=<?php echo $row['id']; ?>" 

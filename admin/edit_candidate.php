@@ -22,53 +22,19 @@ if (isset($_POST['update_candidate'])) {
     $election_id = mysqli_real_escape_string($conn, $_POST['election_id']);
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
 
-    // Handle photo upload if new photo is provided
-    if (!empty($_FILES['photo']['name'])) {
-        $target_dir = "../uploads/";
-        $file_extension = strtolower(pathinfo($_FILES["photo"]["name"], PATHINFO_EXTENSION));
-        $new_filename = uniqid() . '.' . $file_extension;
-        $target_file = $target_dir . $new_filename;
+    // Update candidate information
+    $query = "UPDATE candidates 
+             SET name = '$name', 
+                 position = '$position', 
+                 election_id = '$election_id',
+                 bio = '$bio'
+             WHERE id = $candidate_id";
 
-        // Check if image file is actual image
-        if (getimagesize($_FILES["photo"]["tmp_name"]) === false) {
-            $_SESSION['error'] = "File is not an image.";
-        } else if (!in_array($file_extension, ['jpg', 'jpeg', 'png', 'gif'])) {
-            $_SESSION['error'] = "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-        } else if (move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file)) {
-            // Delete old photo if exists
-            $old_photo_query = "SELECT photo_url FROM candidates WHERE id = $candidate_id";
-            $old_photo_result = mysqli_query($conn, $old_photo_query);
-            $old_photo = mysqli_fetch_assoc($old_photo_result);
-            if ($old_photo && $old_photo['photo_url']) {
-                unlink('../' . $old_photo['photo_url']);
-            }
-            
-            $photo_url = "uploads/" . $new_filename;
-            $query = "UPDATE candidates 
-                     SET name = '$name', 
-                         position = '$position', 
-                         election_id = '$election_id',
-                         bio = '$bio',
-                         photo_url = '$photo_url'
-                     WHERE id = $candidate_id";
-        } else {
-            $_SESSION['error'] = "Sorry, there was an error uploading your file.";
-        }
-    } else {
-        // Update without changing photo
-        $query = "UPDATE candidates 
-                 SET name = '$name', 
-                     position = '$position', 
-                     election_id = '$election_id',
-                     bio = '$bio'
-                 WHERE id = $candidate_id";
-    }
-
-    if (!isset($_SESSION['error']) && mysqli_query($conn, $query)) {
+    if (mysqli_query($conn, $query)) {
         $_SESSION['success'] = "Candidate updated successfully!";
         header("Location: candidates.php");
         exit();
-    } else if (!isset($_SESSION['error'])) {
+    } else {
         $_SESSION['error'] = "Error updating candidate: " . mysqli_error($conn);
     }
 }
@@ -105,7 +71,7 @@ ob_start();
         <div class="modal-header">
             <h2>Edit Candidate</h2>
         </div>
-        <form action="" method="POST" class="admin-form" enctype="multipart/form-data">
+        <form action="" method="POST" class="admin-form">
             <div class="form-group">
                 <label>Name</label>
                 <input type="text" name="name" value="<?php echo htmlspecialchars($candidate['name']); ?>" required>
@@ -128,17 +94,6 @@ ob_start();
             <div class="form-group">
                 <label>Bio</label>
                 <textarea name="bio" rows="4"><?php echo htmlspecialchars($candidate['bio']); ?></textarea>
-            </div>
-            <div class="form-group">
-                <label>Photo</label>
-                <?php if($candidate['photo_url']): ?>
-                    <div class="current-photo">
-                        <img src="../<?php echo $candidate['photo_url']; ?>" alt="Current photo" style="max-width: 200px;">
-                        <p>Current photo</p>
-                    </div>
-                <?php endif; ?>
-                <input type="file" name="photo" accept="image/*">
-                <small>Leave empty to keep current photo</small>
             </div>
             <button type="submit" name="update_candidate" class="submit-btn">Update Candidate</button>
             <a href="candidates.php" class="submit-btn" style="display: block; text-align: center; margin-top: 10px; text-decoration: none; background: #666;">Cancel</a>
@@ -202,16 +157,6 @@ ob_start();
     border-color: #4CAF50;
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
     outline: none;
-}
-
-.current-photo {
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.current-photo img {
-    border-radius: 8px;
-    margin-bottom: 5px;
 }
 
 .submit-btn {
