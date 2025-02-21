@@ -82,8 +82,7 @@ $recent_votes = mysqli_query(
             <div class="top-bar">
                 <h1>Dashboard</h1>
                 <div class="user-info">
-                    <span>, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                    <img src="../assets/default-avatar.png" alt="Admin" class="admin-avatar">
+                    
                 </div>
             </div>
 

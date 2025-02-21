@@ -6,6 +6,7 @@ include '../config.php';
 $page_title = "Edit Election";
 $current_page = "elections";
 
+
 // Check if election ID is provided
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = "No election specified";

@@ -46,7 +46,7 @@
                 <h1><?php echo $page_title; ?></h1>
                 <div class="user-info">
                     <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                    <img src="../assets/default-avatar.png" alt="Admin" class="admin-avatar">
+                    
                 </div>
             </div>
 
