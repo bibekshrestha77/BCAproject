@@ -367,18 +367,10 @@ tr:hover {
                         <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
                         <td><?php echo $row['last_login'] ? date('M d, Y H:i', strtotime($row['last_login'])) : 'Never'; ?></td>
                         <td class="actions">
-                            <?php if($row['id'] != $_SESSION['user_id']): ?>
-                                <a href="edit_user.php?id=<?php echo $row['id']; ?>" class="btn-edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="users.php?delete=<?php echo $row['id']; ?>" 
-                                   class="btn-delete" 
-                                   onclick="return confirm('Are you sure you want to delete this user?')">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            <?php else: ?>
-                                <span class="current-user-badge">Current User</span>
-                            <?php endif; ?>
+                            <a href="users.php?delete=<?php echo $row['id']; ?>" class="btn-delete" 
+                               onclick="return confirm('Are you sure you want to delete this user?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
                         </td>
                     </tr>
                 <?php endwhile; ?>
