@@ -2,33 +2,45 @@
 session_start();
 include '../config.php';
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: login.php");
-    exit();
-}
+ini_set('display_errors', 1);
+error_reporting(E_ALL);  // Show all errors for debugging
 
-if (isset($_GET['id'])) {
-    $id = mysqli_real_escape_string($conn, $_GET['id']);
+if(isset($_GET['id'])) {
+    $user_id = intval($_GET['id']);
     
-    // Don't allow deleting the current admin
-    if ($id == $_SESSION['admin_id']) {
-        $_SESSION['error'] = "You cannot delete your own account!";
+    // Prevent admin self-deletion
+    if ($user_id == $_SESSION['admin_id']) {
+        $_SESSION['error'] = "You cannot delete your own account.";
         header("Location: users.php");
         exit();
     }
 
-    // Delete user's votes first (due to foreign key constraints)
-    mysqli_query($conn, "DELETE FROM votes WHERE user_id = $id");
+    // Check if user exists
+    $check_query = "SELECT * FROM users WHERE id = $user_id";
+    $result = mysqli_query($conn, $check_query);
     
-    // Delete the user
-    if (mysqli_query($conn, "DELETE FROM users WHERE id = $id")) {
-        $_SESSION['success'] = "User deleted successfully!";
+    if (!$result) {
+        error_log("Error checking user: " . mysqli_error($conn));
+        $_SESSION['error'] = "Error checking user: " . mysqli_error($conn);
+        header("Location: users.php");
+        exit();
+    }
+
+    if (mysqli_num_rows($result) > 0) {
+        
+        // Proceed to delete user
+        $query = "DELETE FROM users WHERE id = $user_id";
+        if(mysqli_query($conn, $query)) {
+            $_SESSION['success'] = "User deleted successfully!";
+        } else {
+            error_log("Error deleting user: " . mysqli_error($conn));
+            $_SESSION['error'] = "Error deleting user: " . mysqli_error($conn);
+        }
     } else {
-        $_SESSION['error'] = "Error deleting user: " . mysqli_error($conn);
+        $_SESSION['error'] = "User not found!";
     }
 }
 
 header("Location: users.php");
 exit();
-?> 
+?>
