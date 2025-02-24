@@ -20,6 +20,7 @@ if (isset($_POST['update_candidate'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $position = mysqli_real_escape_string($conn, $_POST['position']);
     $election_id = mysqli_real_escape_string($conn, $_POST['election_id']);
+    $class = mysqli_real_escape_string($conn, $_POST['class']);
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
 
     // Update candidate information

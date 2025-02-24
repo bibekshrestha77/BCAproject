@@ -31,8 +31,8 @@ if(isset($_POST['create_candidate'])) {
         }
     }
     
-    $query = "INSERT INTO candidates (name, position, election_id, course, bio, photo_url) 
-              VALUES ('$name', '$position', '$election_id', '$course', '$bio', '$photo_url')";
+    $query = "INSERT INTO candidates (name, position, election_id, class, bio, photo_url) 
+              VALUES ('$name', '$position', '$election_id', '$class', '$bio', '$photo_url')";
     
     if(mysqli_query($conn, $query)) {
         $_SESSION['success'] = "Candidate added successfully!";
