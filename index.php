@@ -114,22 +114,19 @@ include 'config.php';
             $current_date = date('Y-m-d H:i:s');
 
             if (isset($_SESSION['user_id'])) {
-                // Get elections excluding ones user has already voted in
                 $user_id = $_SESSION['user_id'];
+                // Modified query to get all active elections and check if user has voted
                 $query = "SELECT e.*, 
-              CASE 
-                  WHEN '$current_date' >= e.start_date AND '$current_date' <= e.end_date THEN 'active'
-                  WHEN '$current_date' > e.end_date THEN 'completed'
-                  ELSE 'upcoming'
-              END AS status
-              FROM elections e
-              WHERE e.id NOT IN (
-                  SELECT election_id 
-                  FROM votes 
-                  WHERE user_id = $user_id
-              )
-              HAVING status = 'active'
-              ORDER BY e.end_date ASC";
+                        CASE 
+                            WHEN '$current_date' >= e.start_date AND '$current_date' <= e.end_date THEN 'active'
+                            WHEN '$current_date' > e.end_date THEN 'completed'
+                            ELSE 'upcoming'
+                        END AS status,
+                        v.election_id AS has_voted
+                    FROM elections e
+                    LEFT JOIN votes v ON e.id = v.election_id AND v.user_id = $user_id
+                    HAVING status = 'active'
+                    ORDER BY e.end_date ASC";
             } else {
                 // If user not logged in, show all active elections
                 $query = "SELECT *, 
@@ -166,9 +163,32 @@ include 'config.php';
                 echo "<p class='date'>Ends in: {$days}d {$hours}h</p>";
 
                 if (isset($_SESSION['user_id'])) {
-                echo "<a href='vote.php?id={$row['id']}' class='vote-btn'>Vote Now</a>";
+                    // Get vote counts for this election
+                    $election_id = $row['id'];
+                    $vote_query = "SELECT c.name, COUNT(v.id) as vote_count 
+                                 FROM candidates c 
+                                 LEFT JOIN votes v ON c.id = v.candidate_id 
+                                 WHERE c.election_id = $election_id
+                                 GROUP BY c.id, c.name 
+                                 ORDER BY vote_count DESC";
+                    $vote_result = mysqli_query($conn, $vote_query);
+                    
+                    echo "<div class='vote-counts'>";
+                    echo "<h4>Current Results:</h4>";
+                    echo "<ul class='vote-list'>";
+                    while ($vote_row = mysqli_fetch_assoc($vote_result)) {
+                        echo "<li>{$vote_row['name']}: {$vote_row['vote_count']} votes</li>";
+                    }
+                    echo "</ul>";
+                    echo "</div>";
+
+                    if (!$row['has_voted']) {
+                        echo "<a href='vote.php?id={$row['id']}' class='vote-btn'>Vote Now</a>";
+                    } else {
+                        echo "<span class='voted-badge'>You have voted</span>";
+                    }
                 } else {
-                echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
+                    echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
                 }
                 echo "</div>";
             }

@@ -205,6 +205,42 @@ input[type="radio"]:checked + .vote-button {
     background: #c0392b;
 }
 
+.vote-counts {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.vote-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.vote-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.voted-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.election-card {
+    /* ... existing styles ... */
+    position: relative;
+    padding: 20px;
+    margin: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .voting-container {

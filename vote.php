@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'config.php';
+require_once 'config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -14,29 +14,47 @@ if (!isset($_GET['id'])) {
     exit();
 }
 
-$election_id = mysqli_real_escape_string($conn, $_GET['id']);
 $user_id = $_SESSION['user_id'];
+$election_id = $_GET['id'];
 
-// Check if user has already voted in this election
-$check_vote = mysqli_query($conn, "SELECT * FROM votes WHERE user_id = $user_id AND election_id = $election_id");
-if (mysqli_num_rows($check_vote) > 0) {
-    header("Location: index.php?error=already_voted");
-    exit();
-}
+// Get user's class
+$user_stmt = $pdo->prepare("SELECT class_id FROM users WHERE id = ?");
+$user_stmt->execute([$user_id]);
+$user_class = $user_stmt->fetch(PDO::FETCH_ASSOC);
 
-// Get election details
-$election_query = "SELECT * FROM elections WHERE id = $election_id AND status = 'active'";
-$election_result = mysqli_query($conn, $election_query);
-$election = mysqli_fetch_assoc($election_result);
+// Verify election belongs to user's class
+$election_stmt = $pdo->prepare("
+    SELECT e.*, c.class_name 
+    FROM elections e 
+    JOIN classes c ON e.class_id = c.id 
+    WHERE e.id = ? AND e.class_id = ?
+");
+$election_stmt->execute([$election_id, $user_class['class_id']]);
+$election = $election_stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$election) {
-    header("Location: index.php?error=invalid_election");
+    $_SESSION['error'] = "You can only vote in elections for your own class!";
+    header("Location: index.php");
     exit();
 }
 
-// Get candidates for this election
-$candidates_query = "SELECT * FROM candidates WHERE election_id = $election_id";
-$candidates_result = mysqli_query($conn, $candidates_query);
+// Check if user already voted
+$vote_check = $pdo->prepare("SELECT id FROM votes WHERE user_id = ? AND election_id = ?");
+$vote_check->execute([$user_id, $election_id]);
+if ($vote_check->rowCount() > 0) {
+    $_SESSION['error'] = "You have already voted in this election!";
+    header("Location: index.php");
+    exit();
+}
+
+// Get candidates for this election (from same class)
+$candidate_stmt = $pdo->prepare("
+    SELECT * FROM candidates 
+    WHERE election_id = ? AND class_id = ?
+    ORDER BY name
+");
+$candidate_stmt->execute([$election_id, $user_class['class_id']]);
+$candidates = $candidate_stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -66,7 +84,7 @@ $candidates_result = mysqli_query($conn, $candidates_query);
             <input type="hidden" name="election_id" value="<?php echo $election_id; ?>">
             
             <div class="candidates-grid">
-                <?php while ($candidate = mysqli_fetch_assoc($candidates_result)): ?>
+                <?php foreach ($candidates as $candidate): ?>
                     <div class="candidate-card">
                         <div class="candidate-image">
                             <?php if ($candidate['photo_url']): ?>
@@ -92,7 +110,7 @@ $candidates_result = mysqli_query($conn, $candidates_query);
                             </label>
                         </div>
                     </div>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </div>
 
             <div class="voting-actions">

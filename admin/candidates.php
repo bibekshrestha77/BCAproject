@@ -11,6 +11,7 @@ if(isset($_POST['create_candidate'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $position = mysqli_real_escape_string($conn, $_POST['position']);
     $election_id = mysqli_real_escape_string($conn, $_POST['election_id']);
+    $course = mysqli_real_escape_string($conn, $_POST['course']);
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
     
     // Handle file upload
@@ -30,8 +31,8 @@ if(isset($_POST['create_candidate'])) {
         }
     }
     
-    $query = "INSERT INTO candidates (name, position, election_id, bio, photo_url) 
-              VALUES ('$name', '$position', '$election_id', '$bio', '$photo_url')";
+    $query = "INSERT INTO candidates (name, position, election_id, course, bio, photo_url) 
+              VALUES ('$name', '$position', '$election_id', '$course', '$bio', '$photo_url')";
     
     if(mysqli_query($conn, $query)) {
         $_SESSION['success'] = "Candidate added successfully!";
@@ -374,6 +375,7 @@ tr:hover {
                     <th>Name</th>
                     <th>Position</th>
                     <th>Election</th>
+                    <th>Course</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -394,6 +396,7 @@ tr:hover {
                         <td><?php echo htmlspecialchars($row['name']); ?></td>
                         <td><?php echo htmlspecialchars($row['position']); ?></td>
                         <td><?php echo htmlspecialchars($row['election_name']); ?></td>
+                        <td><?php echo htmlspecialchars($row['course']); ?></td>
                         <td class="actions">
                             <a href="edit_candidate.php?id=<?php echo $row['id']; ?>" class="btn-edit">
                                 <i class="fas fa-edit"></i>
@@ -438,6 +441,21 @@ tr:hover {
                     <?php endwhile; ?>
                 </select>
             </div>
+
+            <div class="form-group">
+                    <label>Course & Semester</label>
+                    <select name="course" required class="class">
+                        <option value="">Select your course and semester</option>
+                        <option value="BCA 1st Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 1st Semester') ? 'selected' : ''; ?>>BCA 1st Semester</option>
+                        <option value="BCA 2nd Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 2nd Semester') ? 'selected' : ''; ?>>BCA 2nd Semester</option>
+                        <option value="BCA 3rd Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 3rd Semester') ? 'selected' : ''; ?>>BCA 3rd Semester</option>
+                        <option value="BCA 4th Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 4th Semester') ? 'selected' : ''; ?>>BCA 4th Semester</option>
+                        <option value="BCA 5th Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 5th Semester') ? 'selected' : ''; ?>>BCA 5th Semester</option>
+                        <option value="BCA 6th Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 6th Semester') ? 'selected' : ''; ?>>BCA 6th Semester</option>
+                        <option value="BCA 7th Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 7th Semester') ? 'selected' : ''; ?>>BCA 7th Semester</option>
+                        <option value="BCA 8th Semester" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BCA 8th Semester') ? 'selected' : ''; ?>>BCA 8th Semester</option>
+                    </select>
+                </div>
             <div class="form-group">
                 <label>Bio</label>
                 <textarea name="bio" rows="4" required></textarea>

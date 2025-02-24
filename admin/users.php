@@ -33,15 +33,6 @@ if(isset($_POST['create_user'])) {
     exit();
 }
 
-// Handle user deletion
-if(isset($_GET['delete']) && $_GET['delete'] != $_SESSION['user_id']) {
-    $id = mysqli_real_escape_string($conn, $_GET['delete']);
-    mysqli_query($conn, "DELETE FROM users WHERE id = $id");
-    $_SESSION['success'] = "User deleted successfully!";
-    header("Location: users.php");
-    exit();
-}
-
 // Get all users
 $users = mysqli_query($conn, "SELECT * FROM users ORDER BY created_at DESC");
 
@@ -367,10 +358,15 @@ tr:hover {
                         <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
                         <td><?php echo $row['last_login'] ? date('M d, Y H:i', strtotime($row['last_login'])) : 'Never'; ?></td>
                         <td class="actions">
-                            <a href="users.php?delete=<?php echo $row['id']; ?>" class="btn-delete" 
-                               onclick="return confirm('Are you sure you want to delete this user?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                            <?php if($row['id'] != $_SESSION['admin_id']): ?>
+                                <a href="delete_user.php?id=<?php echo $row['id']; ?>" 
+                                   class="btn-delete" 
+                                   onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            <?php else: ?>
+                                <span class="current-user-badge">Current User</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endwhile; ?>

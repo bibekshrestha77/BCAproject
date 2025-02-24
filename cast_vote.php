@@ -1,57 +1,56 @@
 <?php
 session_start();
-include 'config.php';
+require_once 'config.php';
 
 if (!isset($_SESSION['user_id']) || !isset($_POST['candidate_id']) || !isset($_POST['election_id'])) {
-    header("Location: index.php?error=invalid_request");
+    header("Location: index.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
-$candidate_id = mysqli_real_escape_string($conn, $_POST['candidate_id']);
-$election_id = mysqli_real_escape_string($conn, $_POST['election_id']);
-
-// Start transaction
-mysqli_begin_transaction($conn);
+$candidate_id = $_POST['candidate_id'];
+$election_id = $_POST['election_id'];
 
 try {
-    // Check if user has already voted
-    $check_vote = mysqli_query($conn, "SELECT id FROM votes WHERE user_id = $user_id AND election_id = $election_id");
-    if (mysqli_num_rows($check_vote) > 0) {
-        throw new Exception("Already voted");
-    }
-
-    // Check if election is still active
-    $check_election = mysqli_query($conn, "SELECT title FROM elections WHERE id = $election_id AND status = 'active'");
-    if (mysqli_num_rows($check_election) == 0) {
-        throw new Exception("Election not active");
+    $pdo->beginTransaction();
+    
+    // Get user's class
+    $user_stmt = $pdo->prepare("SELECT class_id FROM users WHERE id = ?");
+    $user_stmt->execute([$user_id]);
+    $user_class = $user_stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Verify candidate and election belong to user's class
+    $verify_stmt = $pdo->prepare("
+        SELECT c.id 
+        FROM candidates c 
+        JOIN elections e ON c.election_id = e.id 
+        WHERE c.id = ? AND e.id = ? AND c.class_id = ? AND e.class_id = ?
+    ");
+    $verify_stmt->execute([$candidate_id, $election_id, $user_class['class_id'], $user_class['class_id']]);
+    
+    if ($verify_stmt->rowCount() === 0) {
+        throw new Exception("Invalid voting attempt!");
     }
     
-    $election = mysqli_fetch_assoc($check_election);
-
-    // Record the vote
-    $insert_vote = mysqli_query($conn, 
-        "INSERT INTO votes (user_id, election_id, candidate_id) VALUES ($user_id, $election_id, $candidate_id)"
-    );
-
-    // Update candidate vote count
-    $update_count = mysqli_query($conn, 
-        "UPDATE candidates SET votes = votes + 1 WHERE id = $candidate_id"
-    );
-
-    if (!$insert_vote || !$update_count) {
-        throw new Exception("Vote recording failed");
+    // Check for duplicate votes
+    $check_stmt = $pdo->prepare("SELECT id FROM votes WHERE user_id = ? AND election_id = ?");
+    $check_stmt->execute([$user_id, $election_id]);
+    if ($check_stmt->rowCount() > 0) {
+        throw new Exception("You have already voted in this election!");
     }
-
-    mysqli_commit($conn);
-    $_SESSION['vote_success'] = "Your vote for " . htmlspecialchars($election['title']) . " has been successfully recorded!";
-    header("Location: index.php");
-    exit();
-
+    
+    // Cast vote
+    $vote_stmt = $pdo->prepare("INSERT INTO votes (user_id, candidate_id, election_id) VALUES (?, ?, ?)");
+    $vote_stmt->execute([$user_id, $candidate_id, $election_id]);
+    
+    $pdo->commit();
+    $_SESSION['message'] = "Vote cast successfully!";
+    
 } catch (Exception $e) {
-    mysqli_rollback($conn);
-    $_SESSION['vote_error'] = $e->getMessage();
-    header("Location: index.php");
-    exit();
+    $pdo->rollBack();
+    $_SESSION['error'] = $e->getMessage();
 }
+
+header("Location: index.php");
+exit();
 ?> 
