@@ -1,5 +1,8 @@
 <?php
 session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include '../config.php';
 
 // Set page-specific variables
@@ -9,7 +12,7 @@ $current_page = "users";
 // Check if user ID is provided
 if (!isset($_GET['id'])) {
     $_SESSION['error'] = "No user specified";
-    header("Location: manage_user.php");
+    header("Location: users.php");
     exit();
 }
 
@@ -31,7 +34,7 @@ if (isset($_POST['update_user'])) {
 
     if (mysqli_query($conn, $query)) {
         $_SESSION['success'] = "User updated successfully!";
-        header("Location: manage_user.php");
+        header("Location: users.php");
         exit();
     } else {
         $_SESSION['error'] = "Error updating user: " . mysqli_error($conn);
@@ -44,13 +47,18 @@ $user = mysqli_fetch_assoc($result);
 
 if (!$user) {
     $_SESSION['error'] = "User not found";
-    header("Location: manage_user.php");
+    header("Location: users.php");
     exit();
 }
 
 // Get all available courses
-$courses_query = "SELECT DISTINCT course FROM courses ORDER BY course ASC";
+$courses_query = "SELECT id, course FROM courses ORDER BY course ASC";
 $courses = mysqli_query($conn, $courses_query);
+
+if (!$courses) {
+    die("Query Failed: " . mysqli_error($conn)); // Debugging line
+}
+
 
 // Start output buffering
 ob_start();
@@ -85,24 +93,13 @@ ob_start();
                 <label>Course</label>
                 <select name="course" required>
                     <option value="">Select Course</option>
-                    <?php
-                    $courses_list = array(
-                        "BCA 1st Semester",
-                        "BCA 2nd Semester",
-                        "BCA 3rd Semester",
-                        "BCA 4th Semester",
-                        "BCA 5th Semester",
-                        "BCA 6th Semester",
-                        "BCA 7th Semester",
-                        "BCA 8th Semester"
-                    );
-
-                    foreach ($courses_list as $course_option): ?>
-                        <option value="<?php echo $course_option; ?>" <?php echo ($user['course'] == $course_option) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($course_option); ?>
+                    <?php while ($course = mysqli_fetch_assoc($courses)): ?>
+                        <option value="<?php echo $course['id']; ?>" <?php echo ($user['course_id'] == $course['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($course['course']); ?>
                         </option>
-                    <?php endforeach; ?>
+                    <?php endwhile; ?>
                 </select>
+
             </div>
 
             <button type="submit" name="update_user" class="submit-btn">Update User</button>

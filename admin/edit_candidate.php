@@ -20,17 +20,19 @@ if (isset($_POST['update_candidate'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $position = mysqli_real_escape_string($conn, $_POST['position']);
     $election_id = mysqli_real_escape_string($conn, $_POST['election_id']);
-    $course = mysqli_real_escape_string($conn, $_POST['course']);
+    $course_id = mysqli_real_escape_string($conn, $_POST['course']);
+
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
 
     // Update candidate information
     $query = "UPDATE candidates 
-             SET name = '$name', 
-                 position = '$position', 
-                 election_id = '$election_id',
-                 course = '$course',
-                 bio = '$bio'
-             WHERE id = $candidate_id";
+         SET name = '$name', 
+             position = '$position', 
+             election_id = '$election_id',
+             course_id = '$course_id',
+             bio = '$bio'
+         WHERE id = $candidate_id";
+
 
     if (mysqli_query($conn, $query)) {
         $_SESSION['success'] = "Candidate updated successfully!";
@@ -61,12 +63,11 @@ $elections_query = "SELECT id, title
                    ORDER BY created_at DESC";
 $elections = mysqli_query($conn, $elections_query);
 
-// Make sure to keep the current election in the dropdown even if it's not active
-$current_election_query = "SELECT id, title 
-                         FROM elections 
-                         WHERE id = {$candidate['election_id']}";
-$current_election = mysqli_query($conn, $current_election_query);
-$current_election_data = mysqli_fetch_assoc($current_election);
+$courses_query = "SELECT id, course FROM courses ORDER BY course ASC";
+$courses = mysqli_query($conn, $courses_query);
+
+
+
 
 // Start output buffering
 ob_start();
@@ -113,19 +114,14 @@ ob_start();
             <div class="form-group">
                 <label>Course</label>
                 <select name="course" required>
-                    <option value="">Select Course</option>
-                    <?php 
-                    $courses_query = "SELECT id, course FROM courses ORDER BY course ASC";
-                    $courses = mysqli_query($conn, $courses_query);
-                    
-                    
-                    foreach($courses_list as $course_option): ?>
-                        <option value="<?php echo $course_option; ?>" 
-                            <?php echo ($candidate['course'] == $course_option) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($course_option); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+        <option value="">Select Course</option>
+        <?php while ($course = mysqli_fetch_assoc($courses)): ?>
+            <option value="<?php echo $course['id']; ?>" 
+                <?php echo ($candidate['course'] == $course['id']) ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($course['course']); ?>
+            </option>
+        <?php endwhile; ?>
+    </select>
             </div>
 
             <div class="form-group">
