@@ -13,6 +13,7 @@ if (isset($_POST['create_election'])) {
     $description = mysqli_real_escape_string($conn, $_POST['description']);
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
+    $course = mysqli_real_escape_string($conn, $_POST['course']);
 
     // Validate dates
     if (strtotime($end_date) <= strtotime($start_date)) {
@@ -29,8 +30,8 @@ if (isset($_POST['create_election'])) {
         }
 
         // Insert election with dynamic status
-        $query = "INSERT INTO elections (title, description, start_date, end_date, status, created_by) 
-                  VALUES ('$title', '$description', '$start_date', '$end_date', '$status', {$_SESSION['user_id']})";
+        $query = "INSERT INTO elections (title, description, start_date, end_date, status, created_by, course_id) 
+                  VALUES ('$title', '$description', '$start_date', '$end_date', '$status', {$_SESSION['user_id']}, '$course')";
 
         if (mysqli_query($conn, $query)) {
             $_SESSION['success'] = "Election created successfully!";
@@ -97,8 +98,15 @@ mysqli_query($conn, $update_status_query);
 
 
 // Fetch elections with updated statuses
-$sql = "SELECT * FROM elections ORDER BY created_at DESC";
+// Fetch elections with updated statuses and course names
+$sql = "
+    SELECT e.*, c.name AS course_name 
+    FROM elections e 
+    LEFT JOIN courses c ON e.course_id = c.id 
+    ORDER BY e.created_at DESC
+";
 $elections = mysqli_query($conn, $sql);
+
 
 // Start output buffering
 ob_start();
@@ -387,6 +395,7 @@ ob_start();
                 <tr>
                     <th>Title</th>
                     <th>Description</th>
+                    <th>Course</th>
                     <th>Start Date</th>
                     <th>End Date</th>
                     <th>Status</th>
@@ -398,6 +407,7 @@ ob_start();
                     <tr>
                         <td><?php echo htmlspecialchars($row['title']); ?></td>
                         <td><?php echo htmlspecialchars($row['description']); ?></td>
+                        <td><?php echo htmlspecialchars($row['course_name']); ?></td>
                         <td><?php echo date('M d, Y H:i', strtotime($row['start_date'])); ?></td>
                         <td><?php echo date('M d, Y H:i', strtotime($row['end_date'])); ?></td>
                         <td>
@@ -441,6 +451,18 @@ ob_start();
                 <label>Description</label>
                 <textarea name="description" rows="4" required></textarea>
             </div>
+            <div class="form-group">
+            <label>Course</label>
+    <select name="course" required>
+        <option value="">Select Course</option>
+        <?php
+        $courses_query = mysqli_query($conn, "SELECT id, name FROM courses");
+        while ($course = mysqli_fetch_assoc($courses_query)) {
+            echo "<option value='{$course['id']}'>{$course['name']}</option>";
+        }
+        ?>
+    </select>
+    </div>
             <div class="form-group">
                 <label>Start Date</label>
                 <input type="datetime-local" name="start_date" required>

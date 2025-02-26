@@ -23,7 +23,7 @@ if (isset($_POST['update_candidate'])) {
     $course = mysqli_real_escape_string($conn, $_POST['course']);
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
 
-    // Update candidate information including course
+    // Update candidate information
     $query = "UPDATE candidates 
              SET name = '$name', 
                  position = '$position', 
@@ -51,13 +51,22 @@ if (!$candidate) {
     exit();
 }
 
-// Get all elections for dropdown
-$elections_query = "SELECT id, title FROM elections ORDER BY created_at DESC";
+// Modify the elections query to only show active elections
+$current_date = date('Y-m-d H:i:s');
+$elections_query = "SELECT id, title 
+                   FROM elections 
+                   WHERE '$current_date' >= start_date 
+                   AND '$current_date' <= end_date 
+                   AND status = 'active'
+                   ORDER BY created_at DESC";
 $elections = mysqli_query($conn, $elections_query);
 
-// Get all available courses (assuming a courses table exists)
-$courses_query = "SELECT DISTINCT course FROM candidates ORDER BY course ASC";
-$courses = mysqli_query($conn, $courses_query);
+// Make sure to keep the current election in the dropdown even if it's not active
+$current_election_query = "SELECT id, title 
+                         FROM elections 
+                         WHERE id = {$candidate['election_id']}";
+$current_election = mysqli_query($conn, $current_election_query);
+$current_election_data = mysqli_fetch_assoc($current_election);
 
 // Start output buffering
 ob_start();
@@ -77,43 +86,71 @@ ob_start();
         <div class="modal-header">
             <h2>Edit Candidate</h2>
         </div>
-        <form action="" method="POST" class="admin-form">
+        <form action="" method="POST" class="admin-form" enctype="multipart/form-data">
             <div class="form-group">
                 <label>Name</label>
                 <input type="text" name="name" value="<?php echo htmlspecialchars($candidate['name']); ?>" required>
             </div>
+
             <div class="form-group">
                 <label>Position</label>
                 <input type="text" name="position" value="<?php echo htmlspecialchars($candidate['position']); ?>" required>
             </div>
+
             <div class="form-group">
                 <label>Election</label>
                 <select name="election_id" required>
+                    <option value="">Select Election</option>
                     <?php while($election = mysqli_fetch_assoc($elections)): ?>
                         <option value="<?php echo $election['id']; ?>" 
-                            <?php echo ($election['id'] == $candidate['election_id']) ? 'selected' : ''; ?>>
+                                <?php echo ($election['id'] == $candidate['election_id']) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($election['title']); ?>
                         </option>
                     <?php endwhile; ?>
                 </select>
             </div>
+
             <div class="form-group">
                 <label>Course</label>
                 <select name="course" required>
-                    <?php while($course = mysqli_fetch_assoc($courses)): ?>
-                        <option value="<?php echo htmlspecialchars($course['course']); ?>" 
-                            <?php echo ($course['course'] == $candidate['course']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($course['course']); ?>
+                    <option value="">Select Course</option>
+                    <?php 
+                    $courses_query = "SELECT id, course FROM courses ORDER BY course ASC";
+                    $courses = mysqli_query($conn, $courses_query);
+                    
+                    
+                    foreach($courses_list as $course_option): ?>
+                        <option value="<?php echo $course_option; ?>" 
+                            <?php echo ($candidate['course'] == $course_option) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($course_option); ?>
                         </option>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </select>
             </div>
+
             <div class="form-group">
                 <label>Bio</label>
-                <textarea name="bio" rows="4"><?php echo htmlspecialchars($candidate['bio']); ?></textarea>
+                <textarea name="bio" rows="4" required><?php echo htmlspecialchars($candidate['bio']); ?></textarea>
             </div>
+
+            <div class="form-group">
+                <label>Current Photo</label>
+                <?php if($candidate['photo_url']): ?>
+                    <div class="current-photo">
+                        <img src="../<?php echo $candidate['photo_url']; ?>" 
+                             alt="Current photo" 
+                             style="max-width: 200px; border-radius: 8px;">
+                    </div>
+                <?php else: ?>
+                    <p>No photo uploaded</p>
+                <?php endif; ?>
+            </div>
+
             <button type="submit" name="update_candidate" class="submit-btn">Update Candidate</button>
-            <a href="candidates.php" class="submit-btn" style="display: block; text-align: center; margin-top: 10px; text-decoration: none; background: #666;">Cancel</a>
+            <a href="candidates.php" class="submit-btn" 
+               style="display: block; text-align: center; margin-top: 10px; text-decoration: none; background: #666;">
+                Cancel
+            </a>
         </form>
     </div>
 </div>
@@ -158,8 +195,8 @@ ob_start();
 }
 
 .form-group input,
-.form-group textarea,
-.form-group select {
+.form-group select,
+.form-group textarea {
     width: 100%;
     padding: 12px;
     border: 2px solid #e0e0e0;
@@ -169,11 +206,24 @@ ob_start();
 }
 
 .form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
     border-color: #4CAF50;
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
     outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.current-photo {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
 }
 
 .submit-btn {
@@ -191,6 +241,14 @@ ob_start();
 
 .submit-btn:hover {
     background: #45a049;
+}
+
+.error-message {
+    background: #fee;
+    color: #e74c3c;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {
