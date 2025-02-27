@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config.php';
+require_once 'config.php'; // Ensure this file initializes $conn as a mysqli connection
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -15,46 +15,64 @@ if (!isset($_GET['id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$election_id = $_GET['id'];
+$election_id = intval($_GET['id']); // Sanitize election ID
 
-// Get user's class
-$user_stmt = $pdo->prepare("SELECT class_id FROM users WHERE id = ?");
-$user_stmt->execute([$user_id]);
-$user_class = $user_stmt->fetch(PDO::FETCH_ASSOC);
+// Get user's course
+$user_query = "SELECT course_id FROM users WHERE id = ?";
+$user_stmt = $conn->prepare($user_query);
+$user_stmt->bind_param("i", $user_id);
+$user_stmt->execute();
+$user_result = $user_stmt->get_result();
+$user_course = $user_result->fetch_assoc();
 
-// Verify election belongs to user's class
-$election_stmt = $pdo->prepare("
-    SELECT e.*, c.class_name 
+if (!$user_course) {
+    $_SESSION['error'] = "User course not found!";
+    header("Location: index.php");
+    exit();
+}
+
+// Verify election belongs to user's course
+$election_query = "
+    SELECT e.*, c.course AS course_name 
     FROM elections e 
-    JOIN classes c ON e.class_id = c.id 
-    WHERE e.id = ? AND e.class_id = ?
-");
-$election_stmt->execute([$election_id, $user_class['class_id']]);
-$election = $election_stmt->fetch(PDO::FETCH_ASSOC);
+    JOIN courses c ON e.course_id = c.id 
+    WHERE e.id = ? AND e.course_id = ?
+";
+$election_stmt = $conn->prepare($election_query);
+$election_stmt->bind_param("ii", $election_id, $user_course['course_id']);
+$election_stmt->execute();
+$election_result = $election_stmt->get_result();
+$election = $election_result->fetch_assoc();
 
 if (!$election) {
-    $_SESSION['error'] = "You can only vote in elections for your own class!";
+    $_SESSION['error'] = "You can only vote in elections for your own course!";
     header("Location: index.php");
     exit();
 }
 
 // Check if user already voted
-$vote_check = $pdo->prepare("SELECT id FROM votes WHERE user_id = ? AND election_id = ?");
-$vote_check->execute([$user_id, $election_id]);
-if ($vote_check->rowCount() > 0) {
+$vote_check_query = "SELECT id FROM votes WHERE user_id = ? AND election_id = ?";
+$vote_check_stmt = $conn->prepare($vote_check_query);
+$vote_check_stmt->bind_param("ii", $user_id, $election_id);
+$vote_check_stmt->execute();
+$vote_check_result = $vote_check_stmt->get_result();
+
+if ($vote_check_result->num_rows > 0) {
     $_SESSION['error'] = "You have already voted in this election!";
     header("Location: index.php");
     exit();
 }
 
-// Get candidates for this election (from same class)
-$candidate_stmt = $pdo->prepare("
+// Get candidates for this election (from same course)
+$candidate_query = "
     SELECT * FROM candidates 
-    WHERE election_id = ? AND class_id = ?
+    WHERE election_id = ? AND course_id = ?
     ORDER BY name
-");
-$candidate_stmt->execute([$election_id, $user_class['class_id']]);
-$candidates = $candidate_stmt->fetchAll(PDO::FETCH_ASSOC);
+";
+$candidate_stmt = $conn->prepare($candidate_query);
+$candidate_stmt->bind_param("ii", $election_id, $user_course['course_id']);
+$candidate_stmt->execute();
+$candidates = $candidate_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -193,4 +211,4 @@ $candidates = $candidate_stmt->fetchAll(PDO::FETCH_ASSOC);
         });
     </script>
 </body>
-</html> 
+</html>

@@ -1,12 +1,14 @@
 <?php
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "voting_system";
+$host = 'localhost'; // Database host
+$username = 'root'; // Database username
+$password = ''; // Database password
+$database = 'voting_system'; // Database name
 
-$conn = mysqli_connect($host, $username, $password, $database);
+// Create a mysqli connection
+$conn = new mysqli($host, $username, $password, $database);
 
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+// Check for connection errors
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
 }
 ?>
