@@ -39,9 +39,16 @@ if (isset($_SESSION['user_id'])) {
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="profile-dropdown" id="profileDropdown">
-                        <a href="profile.php">My Profile</a>
-                        <a href="edit-profile.php">Edit Profile</a>
-                        <a href="logout.php">Logout</a>
+                        <div class="dropdown-header">
+                            <?php if ($user_data): ?>
+                                <span class="user-name"><?php echo $user_data['first_name'] . ' ' . $user_data['last_name']; ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="profile.php"><i class="fas fa-user-circle"></i> My Profile</a>
+                       
+                        <div class="dropdown-divider"></div>
+                        <a href="logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
                 </div>
             <?php endif; ?>
@@ -139,11 +146,28 @@ if (isset($_SESSION['user_id'])) {
                                          ORDER BY vote_count DESC";
                             $vote_result = mysqli_query($conn, $vote_query);
 
+                            // Get total votes for percentage calculation
+                            $total_votes = 0;
+                            $vote_counts = array();
+                            while ($vote_row = mysqli_fetch_assoc($vote_result)) {
+                                $total_votes += $vote_row['vote_count'];
+                                $vote_counts[] = $vote_row;
+                            }
+
                             echo "<div class='vote-counts'>";
                             echo "<h4>Current Results:</h4>";
                             echo "<ul class='vote-list'>";
-                            while ($vote_row = mysqli_fetch_assoc($vote_result)) {
-                                echo "<li>{$vote_row['name']}: {$vote_row['vote_count']} votes</li>";
+                            foreach ($vote_counts as $vote_row) {
+                                $percentage = $total_votes > 0 ? round(($vote_row['vote_count'] / $total_votes) * 100, 1) : 0;
+                                echo "<li>";
+                                echo "<div class='vote-count-info'>";
+                                echo "<span>{$vote_row['name']}</span>";
+                                echo "<span class='vote-percentage'>{$vote_row['vote_count']} votes ({$percentage}%)</span>";
+                                echo "</div>";
+                                echo "<div class='vote-progress-container'>";
+                                echo "<div class='vote-progress-bar' style='width: {$percentage}%'></div>";
+                                echo "</div>";
+                                echo "</li>";
                             }
                             echo "</ul>";
                             echo "</div>";
@@ -156,6 +180,43 @@ if (isset($_SESSION['user_id'])) {
                         } else {
                             echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
                         }
+                        echo "</div>";
+                    } else {
+                        // Election has ended
+                        echo "<div class='election-card completed'>";
+                        echo "<span class='status completed'>Completed</span>";
+                        echo "<h3>{$row['title']}</h3>";
+                        echo "<p>{$row['description']}</p>";
+
+                        if (isset($_SESSION['user_id'])) {
+                            // Get winner information
+                            $election_id = $row['id'];
+                            $winner_query = "SELECT c.name, COUNT(v.id) as vote_count,
+                                           (SELECT COUNT(DISTINCT user_id) FROM votes WHERE election_id = $election_id) as total_voters
+                                           FROM candidates c 
+                                           LEFT JOIN votes v ON c.id = v.candidate_id 
+                                           WHERE c.election_id = $election_id
+                                           GROUP BY c.id, c.name 
+                                           ORDER BY vote_count DESC
+                                           LIMIT 1";
+                            $winner_result = mysqli_query($conn, $winner_query);
+                            $winner = mysqli_fetch_assoc($winner_result);
+
+                            if ($winner && $winner['vote_count'] > 0) {
+                                echo "<div class='winner-announcement'>";
+                                echo "<div class='winner-crown'><i class='fas fa-crown'></i></div>";
+                                echo "<div class='winner-details'>";
+                                echo "<h4>Winner</h4>";
+                                echo "<p class='winner-name'>{$winner['name']}</p>";
+                                echo "<div class='winner-stats'>";
+                                echo "<span class='votes'><i class='fas fa-check-circle'></i> {$winner['vote_count']} votes</span>";
+                                echo "<span class='total-voters'><i class='fas fa-users'></i> {$winner['total_voters']} total voters</span>";
+                                echo "</div>";
+                                echo "</div>";
+                                echo "</div>";
+                            }
+                        }
+                        echo "<p class='date completed-date'>Ended on " . date('M d, Y', strtotime($row['end_date'])) . "</p>";
                         echo "</div>";
                     }
                 }
@@ -236,29 +297,55 @@ if (isset($_SESSION['user_id'])) {
                     alert.style.display = 'none';
                 }, 5500); // 5.5 seconds (allowing for fade animation)
             });
+
+            // Initialize dropdown functionality
+            initializeDropdown();
         });
 
-        function toggleProfileDropdown() {
-            document.getElementById("profileDropdown").classList.toggle("show");
-        }
+        function initializeDropdown() {
+            const profileIcon = document.querySelector('.profile-icon');
+            const dropdown = document.getElementById('profileDropdown');
+            let isDropdownOpen = false;
 
-        // Close the dropdown if the user clicks outside of it
-        window.onclick = function (event) {
-            if (!event.target.matches('.profile-icon')) {
-                var dropdowns = document.getElementsByClassName("profile-dropdown");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
+            if (profileIcon && dropdown) {
+                profileIcon.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    isDropdownOpen = !isDropdownOpen;
+                    
+                    if (isDropdownOpen) {
+                        dropdown.classList.add('show');
+                        dropdown.style.opacity = '1';
+                        dropdown.style.transform = 'translateY(0)';
+                    } else {
+                        closeDropdown();
                     }
-                }
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (isDropdownOpen && !dropdown.contains(event.target)) {
+                        closeDropdown();
+                    }
+                });
+
+                // Prevent dropdown from closing when clicking inside it
+                dropdown.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            }
+
+            function closeDropdown() {
+                isDropdownOpen = false;
+                dropdown.style.opacity = '0';
+                dropdown.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    dropdown.classList.remove('show');
+                }, 300); // Match the transition duration
             }
         }
     </script>
-</body>
 
-</html>
-<style>
+    <style>
         .profile-container {
             position: relative;
             display: inline-block;
@@ -279,15 +366,21 @@ if (isset($_SESSION['user_id'])) {
             display: none;
             position: absolute;
             right: 0;
-            background-color: #f9f9f9;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            border-radius: 5px;
+            top: 120%;
+            background-color: white;
+            min-width: 300px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            visibility: hidden;
         }
 
         .profile-dropdown.show {
             display: block;
+            visibility: visible;
         }
 
         .profile-dropdown a {
@@ -300,4 +393,158 @@ if (isset($_SESSION['user_id'])) {
         .profile-dropdown a:hover {
             background-color: #f1f1f1;
         }
+
+        /* Vote counts styling */
+        .vote-counts {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .vote-counts h4 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .vote-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .vote-list li {
+            display: block;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+            font-size: 0.95em;
+        }
+
+        .vote-list li:last-child {
+            border-bottom: none;
+        }
+
+        .voted-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        /* Progress bar styling */
+        .vote-progress-container {
+            margin-top: 6px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .vote-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+
+        .vote-count-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .vote-percentage {
+            color: #6c757d;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        /* Winner announcement styling */
+        .winner-announcement {
+            background: linear-gradient(to right, #f3f4f6, #ffffff);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .winner-crown {
+            background: linear-gradient(135deg, #ffd700 0%, #ffec8b 100%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b8860b;
+            font-size: 1.2em;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 0 auto 15px;
+        }
+
+        .winner-details {
+            text-align: center;
+        }
+
+        .winner-details h4 {
+            text-transform: uppercase;
+            color: #6b7280;
+            font-size: 0.8em;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .winner-name {
+            color: #28a745;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        .winner-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .winner-stats i {
+            color: #28a745;
+            margin-right: 6px;
+        }
+
+        .completed-date {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .election-card.completed {
+            background-color: #f8f9fa;
+        }
+
+        .status.completed {
+            background-color: #6c757d;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
     </style>
+</body>
+
+</html>

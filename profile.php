@@ -2,7 +2,7 @@
 session_start();
 include 'config.php';
 
-if(!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
@@ -12,8 +12,15 @@ $query = "SELECT * FROM users WHERE id = $user_id";
 $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
 
-// Get user's voting history
-$votes_query = "SELECT v.*, e.title, c.name as candidate_name 
+// Get user's voting history with winner information for completed elections
+$votes_query = "SELECT v.*, e.title, e.end_date, c.name as candidate_name, 
+                (SELECT w.name 
+                 FROM candidates w 
+                 JOIN votes vw ON w.id = vw.candidate_id 
+                 WHERE vw.election_id = e.id 
+                 GROUP BY w.id 
+                 ORDER BY COUNT(vw.id) DESC 
+                 LIMIT 1) AS winner_name
                 FROM votes v 
                 JOIN elections e ON v.election_id = e.id 
                 JOIN candidates c ON v.candidate_id = c.id 
@@ -37,7 +44,6 @@ $votes_result = mysqli_query($conn, $votes_query);
     <div class="container">
         <div class="profile-container">
             <div class="profile-header">
-                <img src="assets/default-avatar.png" alt="Profile" class="profile-avatar">
                 <h2><?php echo htmlspecialchars($user['username']); ?></h2>
                 <p><?php echo htmlspecialchars($user['email']); ?></p>
             </div>
@@ -45,12 +51,20 @@ $votes_result = mysqli_query($conn, $votes_query);
             <div class="profile-content">
                 <h3>My Voting History</h3>
                 <div class="voting-history">
-                    <?php if(mysqli_num_rows($votes_result) > 0): ?>
-                        <?php while($vote = mysqli_fetch_assoc($votes_result)): ?>
+                    <?php if (mysqli_num_rows($votes_result) > 0): ?>
+                        <?php while ($vote = mysqli_fetch_assoc($votes_result)): ?>
                             <div class="vote-card">
                                 <h4><?php echo htmlspecialchars($vote['title']); ?></h4>
                                 <p>Voted for: <?php echo htmlspecialchars($vote['candidate_name']); ?></p>
                                 <p class="vote-date">Date: <?php echo date('F j, Y', strtotime($vote['voted_at'])); ?></p>
+
+                                <?php
+                                // Check if the election has ended
+                                $current_date = date('Y-m-d H:i:s');
+                                if ($current_date > $vote['end_date'] && !empty($vote['winner_name'])) {
+                                    echo "<p class='winner'>Winner: " . htmlspecialchars($vote['winner_name']) . "</p>";
+                                }
+                                ?>
                             </div>
                         <?php endwhile; ?>
                     <?php else: ?>
@@ -82,4 +96,4 @@ $votes_result = mysqli_query($conn, $votes_query);
     }
     </script>
 </body>
-</html> 
+</html>
