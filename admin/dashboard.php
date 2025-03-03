@@ -2,6 +2,8 @@
 session_start();
 include '../config.php';
 
+date_default_timezone_set('Asia/Kathmandu'); 
+
 // Get statistics
 $stats = [
     'total_users' => mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM users"))['count'],

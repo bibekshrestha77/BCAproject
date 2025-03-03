@@ -1,9 +1,10 @@
 <?php
-
-
 session_start();
 
 include '../config.php';
+
+// Set the time zone
+date_default_timezone_set('Asia/Kathmandu'); // Replace with your time zone
 
 // Set page specific variables
 $page_title = "Manage Elections";
@@ -23,9 +24,16 @@ if (isset($_POST['create_election'])) {
         $_SESSION['error'] = "End date must be after start date";
     } else {
         // Calculate status based on current date
+        // Calculate status based on current date
         $current_date = date('Y-m-d H:i:s');
         $status = 'upcoming'; // Default status
 
+        // Debugging: Print dates for verification
+        echo "Current Date: $current_date\n";
+        echo "Start Date: $start_date\n";
+        echo "End Date: $end_date\n";
+
+        // Update status logic
         if ($current_date >= $start_date && $current_date <= $end_date) {
             $status = 'active';
         } elseif ($current_date > $end_date) {
@@ -34,7 +42,7 @@ if (isset($_POST['create_election'])) {
 
         // Insert election with dynamic status
         $query = "INSERT INTO elections (title, description, start_date, end_date, status, created_by, course_id) 
-                  VALUES ('$title', '$description', '$start_date', '$end_date', '$status', {$_SESSION['user_id']}, '$course_id')";
+          VALUES ('$title', '$description', '$start_date', '$end_date', '$status', {$_SESSION['user_id']}, '$course_id')";
 
         if (mysqli_query($conn, $query)) {
             $_SESSION['success'] = "Election created successfully!";
@@ -456,21 +464,21 @@ ob_start();
                 <textarea name="description" rows="4" required></textarea>
             </div>
             <div class="form-group">
-            <label>Course</label>
-            <select name="course" required>
-    <?php
-    // Fetch all courses
-    $course_query = "SELECT * FROM courses";
-    $courses_result = mysqli_query($conn, $course_query);
+                <label>Course</label>
+                <select name="course" required>
+                    <?php
+                    // Fetch all courses
+                    $course_query = "SELECT * FROM courses";
+                    $courses_result = mysqli_query($conn, $course_query);
 
-    // Populate the dropdown with courses
-    while ($course = mysqli_fetch_assoc($courses_result)) {
-        echo "<option value='" . $course['id'] . "'>" . $course['course'] . "</option>";
-    }
-    ?>
-</select>
+                    // Populate the dropdown with courses
+                    while ($course = mysqli_fetch_assoc($courses_result)) {
+                        echo "<option value='" . $course['id'] . "'>" . $course['course'] . "</option>";
+                    }
+                    ?>
+                </select>
 
-    </div>
+            </div>
             <div class="form-group">
                 <label>Start Date</label>
                 <input type="datetime-local" name="start_date" required>
