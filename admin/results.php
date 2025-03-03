@@ -49,8 +49,56 @@ ob_start();
                                GROUP BY c.id
                                ORDER BY vote_count DESC";
             $candidates = mysqli_query($conn, $candidates_query);
+
+            // Check if the election has ended
+            $current_date = date('Y-m-d H:i:s');
+            $election_ended = ($current_date > $election['end_date']);
+
+            // Determine the winner if the election has ended
+            $winner = null;
+            if ($election_ended) {
+                $winner_query = "SELECT c.*, 
+                                       COUNT(v.id) as vote_count
+                                FROM candidates c
+                                LEFT JOIN votes v ON c.id = v.candidate_id
+                                WHERE c.election_id = {$election['id']}
+                                GROUP BY c.id
+                                ORDER BY vote_count DESC
+                                LIMIT 1";
+                $winner_result = mysqli_query($conn, $winner_query);
+                $winner = mysqli_fetch_assoc($winner_result);
+            }
             ?>
 
+            <!-- Display the winner if the election has ended -->
+            <?php if ($election_ended && $winner): ?>
+                <div class="winner-card">
+                    <div class="winner-header">
+                        <h3>Winner Announcement</h3>
+                    </div>
+                    <div class="winner-details">
+                        <?php if($winner['photo_url']): ?>
+                            <img src="../<?php echo $winner['photo_url']; ?>" 
+                                 alt="<?php echo htmlspecialchars($winner['name']); ?>"
+                                 class="winner-photo">
+                        <?php else: ?>
+                            <div class="winner-photo-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        <?php endif; ?>
+                        <div class="winner-info">
+                            <h3><?php echo htmlspecialchars($winner['name']); ?></h3>
+                            <p class="position"><?php echo htmlspecialchars($winner['position']); ?></p>
+                            <p class="vote-count">
+                                <i class="fas fa-trophy"></i>
+                                <?php echo $winner['vote_count']; ?> votes
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Display all candidates' results -->
             <div class="candidates-results">
                 <?php while($candidate = mysqli_fetch_assoc($candidates)): ?>
                     <div class="candidate-result">
@@ -95,4 +143,74 @@ ob_start();
 <?php
 $content = ob_get_clean();
 include 'layout.php';
-?> 
+?>
+<style>
+ /* Winner Card Styles */
+.winner-card {
+    background-color: #fff;
+    border: 2px solid #4CAF50; /* Green border */
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.winner-header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.winner-header h3 {
+    font-size: 24px;
+    color: #4CAF50; /* Green color */
+    margin: 0;
+}
+
+.winner-details {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.winner-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.winner-photo-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: #ccc;
+}
+
+.winner-info h3 {
+    font-size: 22px;
+    margin: 0;
+}
+
+.winner-info .position {
+    font-size: 16px;
+    color: #666;
+    margin: 5px 0;
+}
+
+.winner-info .vote-count {
+    font-size: 18px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.winner-info .vote-count i {
+    color: #4CAF50; /* Green color */
+}
+</style>
