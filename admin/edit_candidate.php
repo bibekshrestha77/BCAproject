@@ -21,18 +21,40 @@ if (isset($_POST['update_candidate'])) {
     $position = mysqli_real_escape_string($conn, $_POST['position']);
     $election_id = mysqli_real_escape_string($conn, $_POST['election_id']);
     $course_id = mysqli_real_escape_string($conn, $_POST['course']);
-
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
+
+    // Handle file upload
+    $photo_url = $candidate['photo_url']; // Keep the existing photo by default
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] == 0) {
+        $target_dir = "../uploads/candidates/";
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Delete the old photo if it exists
+        if ($candidate['photo_url']) {
+            unlink("../" . $candidate['photo_url']);
+        }
+
+        // Upload the new photo
+        $file_extension = strtolower(pathinfo($_FILES["photo"]["name"], PATHINFO_EXTENSION));
+        $file_name = uniqid() . '.' . $file_extension;
+        $target_file = $target_dir . $file_name;
+
+        if (move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file)) {
+            $photo_url = 'uploads/candidates/' . $file_name;
+        }
+    }
 
     // Update candidate information
     $query = "UPDATE candidates 
-         SET name = '$name', 
-             position = '$position', 
-             election_id = '$election_id',
-             course_id = '$course_id',
-             bio = '$bio'
-         WHERE id = $candidate_id";
-
+              SET name = '$name', 
+                  position = '$position', 
+                  election_id = '$election_id',
+                  course_id = '$course_id',
+                  bio = '$bio',
+                  photo_url = '$photo_url'
+              WHERE id = $candidate_id";
 
     if (mysqli_query($conn, $query)) {
         $_SESSION['success'] = "Candidate updated successfully!";
@@ -65,9 +87,6 @@ $elections = mysqli_query($conn, $elections_query);
 
 $courses_query = "SELECT id, course FROM courses ORDER BY course ASC";
 $courses = mysqli_query($conn, $courses_query);
-
-
-
 
 // Start output buffering
 ob_start();
@@ -114,14 +133,14 @@ ob_start();
             <div class="form-group">
                 <label>Course</label>
                 <select name="course" required>
-        <option value="">Select Course</option>
-        <?php while ($course = mysqli_fetch_assoc($courses)): ?>
-            <option value="<?php echo $course['id']; ?>" 
-                <?php echo ($candidate['course'] == $course['id']) ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($course['course']); ?>
-            </option>
-        <?php endwhile; ?>
-    </select>
+                    <option value="">Select Course</option>
+                    <?php while ($course = mysqli_fetch_assoc($courses)): ?>
+                        <option value="<?php echo $course['id']; ?>" 
+                            <?php echo ($candidate['course'] == $course['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($course['course']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
             </div>
 
             <div class="form-group">
@@ -140,6 +159,11 @@ ob_start();
                 <?php else: ?>
                     <p>No photo uploaded</p>
                 <?php endif; ?>
+            </div>
+
+            <div class="form-group">
+                <label>Upload New Photo</label>
+                <input type="file" name="photo" accept="image/*">
             </div>
 
             <button type="submit" name="update_candidate" class="submit-btn">Update Candidate</button>
