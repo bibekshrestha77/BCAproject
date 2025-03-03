@@ -153,6 +153,12 @@ include 'layout.php';
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.winner-card:hover {
+    transform: translateY(-5px); /* Slight lift on hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
 }
 
 .winner-header {
@@ -164,6 +170,11 @@ include 'layout.php';
     font-size: 24px;
     color: #4CAF50; /* Green color */
     margin: 0;
+    transition: color 0.3s ease;
+}
+
+.winner-card:hover .winner-header h3 {
+    color: #45a049; /* Darker green on hover */
 }
 
 .winner-details {
@@ -177,6 +188,11 @@ include 'layout.php';
     height: 100px;
     border-radius: 50%;
     object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.winner-card:hover .winner-photo {
+    transform: scale(1.1); /* Slight zoom on hover */
 }
 
 .winner-photo-placeholder {
@@ -189,17 +205,32 @@ include 'layout.php';
     justify-content: center;
     font-size: 40px;
     color: #ccc;
+    transition: background-color 0.3s ease;
+}
+
+.winner-card:hover .winner-photo-placeholder {
+    background-color: #e0e0e0; /* Slightly darker background on hover */
 }
 
 .winner-info h3 {
     font-size: 22px;
     margin: 0;
+    transition: color 0.3s ease;
+}
+
+.winner-card:hover .winner-info h3 {
+    color: #45a049; /* Darker green on hover */
 }
 
 .winner-info .position {
     font-size: 16px;
     color: #666;
     margin: 5px 0;
+    transition: color 0.3s ease;
+}
+
+.winner-card:hover .winner-info .position {
+    color: #555; /* Slightly darker text on hover */
 }
 
 .winner-info .vote-count {
@@ -208,9 +239,19 @@ include 'layout.php';
     display: flex;
     align-items: center;
     gap: 10px;
+    transition: color 0.3s ease;
+}
+
+.winner-card:hover .winner-info .vote-count {
+    color: #45a049; /* Darker green on hover */
 }
 
 .winner-info .vote-count i {
     color: #4CAF50; /* Green color */
+    transition: color 0.3s ease;
+}
+
+.winner-card:hover .winner-info .vote-count i {
+    color: #45a049; /* Darker green on hover */
 }
 </style>
