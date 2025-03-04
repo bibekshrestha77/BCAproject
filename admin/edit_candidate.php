@@ -23,37 +23,13 @@ if (isset($_POST['update_candidate'])) {
     $course_id = mysqli_real_escape_string($conn, $_POST['course']);
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
 
-    // Handle file upload
-    $photo_url = $candidate['photo_url']; // Keep the existing photo by default
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] == 0) {
-        $target_dir = "../uploads/candidates/";
-        if (!file_exists($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-
-        // Delete the old photo if it exists
-        if ($candidate['photo_url']) {
-            unlink("../" . $candidate['photo_url']);
-        }
-
-        // Upload the new photo
-        $file_extension = strtolower(pathinfo($_FILES["photo"]["name"], PATHINFO_EXTENSION));
-        $file_name = uniqid() . '.' . $file_extension;
-        $target_file = $target_dir . $file_name;
-
-        if (move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file)) {
-            $photo_url = 'uploads/candidates/' . $file_name;
-        }
-    }
-
-    // Update candidate information
+    // Update candidate information (no photo handling)
     $query = "UPDATE candidates 
               SET name = '$name', 
                   position = '$position', 
                   election_id = '$election_id',
                   course_id = '$course_id',
-                  bio = '$bio',
-                  photo_url = '$photo_url'
+                  bio = '$bio'
               WHERE id = $candidate_id";
 
     if (mysqli_query($conn, $query)) {
@@ -106,7 +82,7 @@ ob_start();
         <div class="modal-header">
             <h2>Edit Candidate</h2>
         </div>
-        <form action="" method="POST" class="admin-form" enctype="multipart/form-data">
+        <form action="" method="POST" class="admin-form">
             <div class="form-group">
                 <label>Name</label>
                 <input type="text" name="name" value="<?php echo htmlspecialchars($candidate['name']); ?>" required>
@@ -146,24 +122,6 @@ ob_start();
             <div class="form-group">
                 <label>Bio</label>
                 <textarea name="bio" rows="4" required><?php echo htmlspecialchars($candidate['bio']); ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Current Photo</label>
-                <?php if($candidate['photo_url']): ?>
-                    <div class="current-photo">
-                        <img src="../<?php echo $candidate['photo_url']; ?>" 
-                             alt="Current photo" 
-                             style="max-width: 200px; border-radius: 8px;">
-                    </div>
-                <?php else: ?>
-                    <p>No photo uploaded</p>
-                <?php endif; ?>
-            </div>
-
-            <div class="form-group">
-                <label>Upload New Photo</label>
-                <input type="file" name="photo" accept="image/*">
             </div>
 
             <button type="submit" name="update_candidate" class="submit-btn">Update Candidate</button>
@@ -236,14 +194,6 @@ ob_start();
 .form-group textarea {
     resize: vertical;
     min-height: 100px;
-}
-
-.current-photo {
-    margin-top: 10px;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    text-align: center;
 }
 
 .submit-btn {

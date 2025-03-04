@@ -14,25 +14,8 @@ if(isset($_POST['create_candidate'])) {
     $course_id = mysqli_real_escape_string($conn, $_POST['course_id']);
     $bio = mysqli_real_escape_string($conn, $_POST['bio']);
     
-    // Handle file upload
-    $photo_url = '';
-    if(isset($_FILES['photo']) && $_FILES['photo']['error'] == 0) {
-        $target_dir = "../uploads/candidates/";
-        if (!file_exists($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-        
-        $file_extension = strtolower(pathinfo($_FILES["photo"]["name"], PATHINFO_EXTENSION));
-        $file_name = uniqid() . '.' . $file_extension;
-        $target_file = $target_dir . $file_name;
-        
-        if(move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file)) {
-            $photo_url = 'uploads/candidates/' . $file_name;
-        }
-    }
-    
-    $query = "INSERT INTO candidates (name, position, election_id, course_id, bio, photo_url) 
-VALUES ('$name', '$position', '$election_id', '$course_id', '$bio', '$photo_url')";
+    $query = "INSERT INTO candidates (name, position, election_id, course_id, bio) 
+              VALUES ('$name', '$position', '$election_id', '$course_id', '$bio')";
 
     if(mysqli_query($conn, $query)) {
         $_SESSION['success'] = "Candidate added successfully!";
@@ -47,14 +30,6 @@ VALUES ('$name', '$position', '$election_id', '$course_id', '$bio', '$photo_url'
 if(isset($_GET['delete'])) {
     $id = mysqli_real_escape_string($conn, $_GET['delete']);
     
-    // Get photo URL before deleting
-    $photo_query = mysqli_query($conn, "SELECT photo_url FROM candidates WHERE id = $id");
-    $candidate = mysqli_fetch_assoc($photo_query);
-    
-    if($candidate && $candidate['photo_url']) {
-        unlink("../" . $candidate['photo_url']); // Delete photo file
-    }
-    
     mysqli_query($conn, "DELETE FROM candidates WHERE id = $id");
     $_SESSION['success'] = "Candidate deleted successfully!";
     header("Location: candidates.php");
@@ -68,8 +43,6 @@ $candidates = mysqli_query($conn,
      LEFT JOIN courses co ON c.course_id = co.id 
      ORDER BY e.title, c.name"
 );
-
-
 
 // Get elections for dropdown
 $elections = mysqli_query($conn, "SELECT id, title FROM elections WHERE status != 'completed'");
@@ -203,43 +176,6 @@ ob_start();
     outline: none;
 }
 
-/* File Upload Styles */
-.file-upload {
-    border: 2px dashed #e0e0e0;
-    padding: 30px;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.file-upload:hover {
-    border-color: #4CAF50;
-    background-color: #f9f9f9;
-}
-
-.file-upload i {
-    font-size: 40px;
-    color: #999;
-    margin-bottom: 10px;
-}
-
-.file-upload p {
-    margin: 0;
-    color: #666;
-}
-
-#photo-preview {
-    margin-top: 10px;
-    text-align: center;
-}
-
-#photo-preview img {
-    max-width: 200px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
 .submit-btn {
     background: #4CAF50;
     color: white;
@@ -286,23 +222,22 @@ tr:hover {
     background-color: #f8f9fa;
 }
 
-/* Candidate Photo */
-.candidate-photo {
+/* Candidate Avatar */
+.candidate-avatar-placeholder {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    object-fit: cover;
-}
-
-.candidate-photo-placeholder {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #f0f0f0;
+    background: #e9ecef;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: #6c757d;
+    margin-right: 12px;
+}
+
+.candidate-name {
+    display: flex;
+    align-items: center;
 }
 
 /* Action Buttons */
@@ -373,7 +308,6 @@ tr:hover {
         <table>
             <thead>
                 <tr>
-                    <th>Photo</th>
                     <th>Name</th>
                     <th>Position</th>
                     <th>Election</th>
@@ -385,21 +319,16 @@ tr:hover {
                 <?php while($row = mysqli_fetch_assoc($candidates)): ?>
                     <tr>
                         <td>
-                            <?php if($row['photo_url']): ?>
-                                <img src="../<?php echo $row['photo_url']; ?>" 
-                                     alt="<?php echo htmlspecialchars($row['name']); ?>"
-                                     class="candidate-photo">
-                            <?php else: ?>
-                                <div class="candidate-photo-placeholder">
+                            <div class="candidate-name">
+                                <div class="candidate-avatar-placeholder">
                                     <i class="fas fa-user"></i>
                                 </div>
-                            <?php endif; ?>
+                                <?php echo htmlspecialchars($row['name']); ?>
+                            </div>
                         </td>
-                        <td><?php echo htmlspecialchars($row['name']); ?></td>
                         <td><?php echo htmlspecialchars($row['position']); ?></td>
                         <td><?php echo htmlspecialchars($row['election_name']); ?></td>
                         <td><?php echo htmlspecialchars($row['course']); ?></td>
-
                         <td class="actions">
                             <a href="edit_candidate.php?id=<?php echo $row['id']; ?>" class="btn-edit">
                                 <i class="fas fa-edit"></i>
@@ -424,7 +353,7 @@ tr:hover {
             <h2>Add New Candidate</h2>
             <span class="close">&times;</span>
         </div>
-        <form action="" method="POST" class="admin-form" enctype="multipart/form-data">
+        <form action="" method="POST" class="admin-form">
             <div class="form-group">
                 <label>Name</label>
                 <input type="text" name="name" required>
@@ -446,32 +375,23 @@ tr:hover {
             </div>
 
             <div class="form-group">
-    <label>Course & Semester</label>
-    <select name="course_id" required>
-        <option value="">Select Course</option>
-        <?php 
-        // Query to fetch courses from the courses table
-        $courses = mysqli_query($conn, "SELECT id, course FROM courses");
-        while ($course = mysqli_fetch_assoc($courses)): ?>
-            <option value="<?php echo $course['id']; ?>">
-                <?php echo htmlspecialchars($course['course']); ?>
-            </option>
-        <?php endwhile; ?>
-    </select>
-</div>
+                <label>Course & Semester</label>
+                <select name="course_id" required>
+                    <option value="">Select Course</option>
+                    <?php 
+                    // Query to fetch courses from the courses table
+                    $courses = mysqli_query($conn, "SELECT id, course FROM courses");
+                    while ($course = mysqli_fetch_assoc($courses)): ?>
+                        <option value="<?php echo $course['id']; ?>">
+                            <?php echo htmlspecialchars($course['course']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
 
             <div class="form-group">
                 <label>Bio</label>
                 <textarea name="bio" rows="4" required></textarea>
-            </div>
-            <div class="form-group">
-                <label>Photo</label>
-                <div class="file-upload" onclick="document.getElementById('photo').click()">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Click to upload photo</p>
-                    <input type="file" id="photo" name="photo" accept="image/*" style="display: none">
-                </div>
-                <div id="photo-preview"></div>
             </div>
             <button type="submit" name="create_candidate" class="submit-btn">Add Candidate</button>
         </form>
@@ -493,19 +413,6 @@ window.onclick = function(event) {
         document.getElementById('addCandidateModal').style.display = 'none';
     }
 }
-
-// Photo preview
-document.getElementById('photo').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if(file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('photo-preview');
-            preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-        }
-        reader.readAsDataURL(file);
-    }
-});
 </script>
 
 <?php
