@@ -20,7 +20,14 @@ $votes_query = "SELECT v.*, e.title, e.end_date, c.name as candidate_name,
                  WHERE vw.election_id = e.id 
                  GROUP BY w.id 
                  ORDER BY COUNT(vw.id) DESC 
-                 LIMIT 1) AS winner_name
+                 LIMIT 1) AS winner_name,
+                (SELECT COUNT(vw.id) 
+                 FROM candidates w 
+                 JOIN votes vw ON w.id = vw.candidate_id 
+                 WHERE vw.election_id = e.id 
+                 GROUP BY w.id 
+                 ORDER BY COUNT(vw.id) DESC 
+                 LIMIT 1) AS winner_votes
                 FROM votes v 
                 JOIN elections e ON v.election_id = e.id 
                 JOIN candidates c ON v.candidate_id = c.id 
@@ -62,7 +69,7 @@ $votes_result = mysqli_query($conn, $votes_query);
                                 // Check if the election has ended
                                 $current_date = date('Y-m-d H:i:s');
                                 if ($current_date > $vote['end_date'] && !empty($vote['winner_name'])) {
-                                    echo "<p class='winner'>Winner: " . htmlspecialchars($vote['winner_name']) . "</p>";
+                                    echo "<p class='winner'>Winner: " . htmlspecialchars($vote['winner_name']) . " (" . $vote['winner_votes'] . " votes)</p>";
                                 }
                                 ?>
                             </div>
