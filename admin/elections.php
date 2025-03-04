@@ -4,7 +4,7 @@ session_start();
 include '../config.php';
 
 // Set the time zone
-date_default_timezone_set('Asia/Kathmandu'); // Replace with your time zone
+date_default_timezone_set('Asia/Kathmandu'); 
 
 // Set page specific variables
 $page_title = "Manage Elections";

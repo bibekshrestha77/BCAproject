@@ -1,6 +1,8 @@
 <?php
 session_start();
 include 'config.php';
+// Set the time zone
+date_default_timezone_set('Asia/Kathmandu'); 
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -69,7 +71,16 @@ $votes_result = mysqli_query($conn, $votes_query);
                                 // Check if the election has ended
                                 $current_date = date('Y-m-d H:i:s');
                                 if ($current_date > $vote['end_date'] && !empty($vote['winner_name'])) {
-                                    echo "<p class='winner'>Winner: " . htmlspecialchars($vote['winner_name']) . " (" . $vote['winner_votes'] . " votes)</p>";
+                                    echo "<div class='winner-announcement'>";
+                                    echo "<i class='fas fa-trophy winner-trophy'></i>";
+                                    echo "<div class='winner-details'>";
+                                    echo "<h5>Election Winner</h5>";
+                                    echo "<p class='winner-name'>" . htmlspecialchars($vote['winner_name']) . "</p>";
+                                    echo "<div class='vote-count'>" . $vote['winner_votes'] . " votes</div>";
+                                    echo "</div>";
+                                    echo "</div>";
+                                } elseif ($current_date <= $vote['end_date']) {
+                                    echo "<p class='election-status'>Election in progress - Ends on " . date('F j, Y', strtotime($vote['end_date'])) . "</p>";
                                 }
                                 ?>
                             </div>

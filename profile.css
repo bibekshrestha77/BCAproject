@@ -151,4 +151,81 @@
     padding: 15px;
     border-radius: 5px;
     margin-bottom: 20px;
+}
+
+.winner-announcement {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.winner-announcement::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.winner-trophy {
+    color: #4CAF50;
+    font-size: 32px;
+    margin-bottom: 15px;
+    display: block;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.winner-details {
+    text-align: center;
+}
+
+.winner-details h5 {
+    color: #4CAF50;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 10px 0;
+}
+
+.winner-details .winner-name {
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 10px 0;
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border-radius: 30px;
+    display: inline-block;
+}
+
+.vote-count {
+    color: #666;
+    font-size: 16px;
+    margin-top: 10px;
+    padding: 5px 15px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.election-status {
+    background: #f8f9fa;
+    color: #666;
+    font-style: italic;
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px dashed #ddd;
 } 

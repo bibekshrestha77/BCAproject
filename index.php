@@ -2,6 +2,8 @@
 session_start();
 include 'config.php';
 
+
+
 // Fetch user's course_id from the session or database
 $user_course_id = null;
 if (isset($_SESSION['user_id'])) {
@@ -23,7 +25,6 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Voting System</title>
     <link rel="stylesheet" href="style.css">
-   
 </head>
 
 <body>
@@ -46,7 +47,6 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                         <div class="dropdown-divider"></div>
                         <a href="profile.php"><i class="fas fa-user-circle"></i> My Profile</a>
-                       
                         <div class="dropdown-divider"></div>
                         <a href="logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
@@ -83,42 +83,38 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <div class="features-section">
-        <h2>Available Elections</h2>
+        <h2>Active Elections</h2>
         <div class="election-cards">
             <?php
             $current_date = date('Y-m-d H:i:s');
 
             if (isset($_SESSION['user_id'])) {
-                $user_id = $_SESSION['user_id'];
-                // Modified query to get all active elections for the user's course and check if user has voted
+                // For logged-in users, fetch active elections for their course
                 $query = "SELECT e.*, 
-                        CASE 
-                            WHEN '$current_date' >= e.start_date AND '$current_date' <= e.end_date THEN 'active'
-                            WHEN '$current_date' > e.end_date THEN 'completed'
-                            ELSE 'upcoming'
-                        END AS status,
-                        v.election_id AS has_voted
-                    FROM elections e
-                    LEFT JOIN votes v ON e.id = v.election_id AND v.user_id = $user_id
-                    WHERE e.course_id = $user_course_id
-                    HAVING status = 'active'
-                    ORDER BY e.end_date ASC";
+                          CASE 
+                              WHEN v.user_id IS NOT NULL THEN 1 
+                              ELSE 0 
+                          END AS has_voted
+                          FROM elections e
+                          LEFT JOIN votes v ON e.id = v.election_id AND v.user_id = " . intval($_SESSION['user_id']) . "
+                          WHERE e.course_id = " . intval($user_course_id) . "
+                          AND NOW() >= e.start_date 
+                          AND NOW() <= e.end_date
+                          ORDER BY e.end_date ASC";
             } else {
-                // If user not logged in, show all active elections
-                $query = "SELECT *, 
-              CASE 
-                  WHEN '$current_date' >= start_date AND '$current_date' <= end_date THEN 'active'
-                  WHEN '$current_date' > end_date THEN 'completed'
-                  ELSE 'upcoming'
-              END AS status
-              FROM elections
-              HAVING status = 'active'
-              ORDER BY end_date ASC";
+                // For non-logged-in users, fetch all active elections
+                $query = "SELECT * 
+                          FROM elections 
+                          WHERE NOW() >= start_date 
+                          AND NOW() <= end_date
+                          ORDER BY end_date ASC";
             }
 
             $result = mysqli_query($conn, $query);
 
-            if (mysqli_num_rows($result) > 0) {
+            if (!$result) {
+                echo "<div class='error-message'>Error fetching elections: " . mysqli_error($conn) . "</div>";
+            } else if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
                     $end_date = strtotime($row['end_date']);
                     $now = time();
@@ -181,54 +177,12 @@ if (isset($_SESSION['user_id'])) {
                             echo "<a href='login.php' class='vote-btn'>Login to Vote</a>";
                         }
                         echo "</div>";
-                    } else {
-                        // Election has ended
-                        echo "<div class='election-card completed'>";
-                        echo "<span class='status completed'>Completed</span>";
-                        echo "<h3>{$row['title']}</h3>";
-                        echo "<p>{$row['description']}</p>";
-
-                        if (isset($_SESSION['user_id'])) {
-                            // Get winner information
-                            $election_id = $row['id'];
-                            $winner_query = "SELECT c.name, COUNT(v.id) as vote_count,
-                                           (SELECT COUNT(DISTINCT user_id) FROM votes WHERE election_id = $election_id) as total_voters
-                                           FROM candidates c 
-                                           LEFT JOIN votes v ON c.id = v.candidate_id 
-                                           WHERE c.election_id = $election_id
-                                           GROUP BY c.id, c.name 
-                                           ORDER BY vote_count DESC
-                                           LIMIT 1";
-                            $winner_result = mysqli_query($conn, $winner_query);
-                            $winner = mysqli_fetch_assoc($winner_result);
-
-                            if ($winner && $winner['vote_count'] > 0) {
-                                echo "<div class='winner-announcement'>";
-                                echo "<div class='winner-crown'><i class='fas fa-crown'></i></div>";
-                                echo "<div class='winner-details'>";
-                                echo "<h4>Winner</h4>";
-                                echo "<p class='winner-name'>{$winner['name']}</p>";
-                                echo "<div class='winner-stats'>";
-                                echo "<span class='votes'><i class='fas fa-check-circle'></i> {$winner['vote_count']} votes</span>";
-                                echo "<span class='total-voters'><i class='fas fa-users'></i> {$winner['total_voters']} total voters</span>";
-                                echo "</div>";
-                                echo "</div>";
-                                echo "</div>";
-                            }
-                        }
-                        echo "<p class='date completed-date'>Ended on " . date('M d, Y', strtotime($row['end_date'])) . "</p>";
-                        echo "</div>";
                     }
                 }
             } else {
                 echo "<div class='no-elections'>";
                 echo "<i class='fas fa-check-circle'></i>";
-                if (isset($_SESSION['user_id'])) {
-                    echo "<p>You have voted in all available elections!</p>";
-                    echo "<a href='profile.php' class='view-history-btn'>View Your Voting History</a>";
-                } else {
-                    echo "<p>No active elections at the moment.</p>";
-                }
+                echo "<p>No active elections at the moment.</p>";
                 echo "</div>";
             }
             ?>
