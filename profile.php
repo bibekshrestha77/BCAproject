@@ -15,7 +15,7 @@ $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
 
 // Get user's voting history with winner information for completed elections
-$votes_query = "SELECT v.*, e.title, e.end_date, c.name as candidate_name, 
+$votes_query = "SELECT v.*, e.title, e.end_date, 
                 (SELECT w.name 
                  FROM candidates w 
                  JOIN votes vw ON w.id = vw.candidate_id 
@@ -32,7 +32,6 @@ $votes_query = "SELECT v.*, e.title, e.end_date, c.name as candidate_name,
                  LIMIT 1) AS winner_votes
                 FROM votes v 
                 JOIN elections e ON v.election_id = e.id 
-                JOIN candidates c ON v.candidate_id = c.id 
                 WHERE v.user_id = $user_id";
 $votes_result = mysqli_query($conn, $votes_query);
 ?>
@@ -64,7 +63,6 @@ $votes_result = mysqli_query($conn, $votes_query);
                         <?php while ($vote = mysqli_fetch_assoc($votes_result)): ?>
                             <div class="vote-card">
                                 <h4><?php echo htmlspecialchars($vote['title']); ?></h4>
-                                <p>Voted for: <?php echo htmlspecialchars($vote['candidate_name']); ?></p>
                                 <p class="vote-date">Date: <?php echo date('F j, Y', strtotime($vote['voted_at'])); ?></p>
 
                                 <?php

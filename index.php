@@ -2,8 +2,6 @@
 session_start();
 include 'config.php';
 
-
-
 // Fetch user's course_id from the session or database
 $user_course_id = null;
 if (isset($_SESSION['user_id'])) {
@@ -132,42 +130,6 @@ if (isset($_SESSION['user_id'])) {
                         echo "<p class='date'>Ends in: {$days}d {$hours}h</p>";
 
                         if (isset($_SESSION['user_id'])) {
-                            // Get vote counts for this election
-                            $election_id = $row['id'];
-                            $vote_query = "SELECT c.name, COUNT(v.id) as vote_count 
-                                         FROM candidates c 
-                                         LEFT JOIN votes v ON c.id = v.candidate_id 
-                                         WHERE c.election_id = $election_id
-                                         GROUP BY c.id, c.name 
-                                         ORDER BY vote_count DESC";
-                            $vote_result = mysqli_query($conn, $vote_query);
-
-                            // Get total votes for percentage calculation
-                            $total_votes = 0;
-                            $vote_counts = array();
-                            while ($vote_row = mysqli_fetch_assoc($vote_result)) {
-                                $total_votes += $vote_row['vote_count'];
-                                $vote_counts[] = $vote_row;
-                            }
-
-                            echo "<div class='vote-counts'>";
-                            echo "<h4>Current Results:</h4>";
-                            echo "<ul class='vote-list'>";
-                            foreach ($vote_counts as $vote_row) {
-                                $percentage = $total_votes > 0 ? round(($vote_row['vote_count'] / $total_votes) * 100, 1) : 0;
-                                echo "<li>";
-                                echo "<div class='vote-count-info'>";
-                                echo "<span>{$vote_row['name']}</span>";
-                                echo "<span class='vote-percentage'>{$vote_row['vote_count']} votes ({$percentage}%)</span>";
-                                echo "</div>";
-                                echo "<div class='vote-progress-container'>";
-                                echo "<div class='vote-progress-bar' style='width: {$percentage}%'></div>";
-                                echo "</div>";
-                                echo "</li>";
-                            }
-                            echo "</ul>";
-                            echo "</div>";
-
                             if (!$row['has_voted']) {
                                 echo "<a href='vote.php?id={$row['id']}' class='vote-btn'>Vote Now</a>";
                             } else {
@@ -348,40 +310,6 @@ if (isset($_SESSION['user_id'])) {
             background-color: #f1f1f1;
         }
 
-        /* Vote counts styling */
-        .vote-counts {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .vote-counts h4 {
-            color: #2c3e50;
-            margin: 0 0 10px 0;
-            font-size: 1.1em;
-            font-weight: 600;
-        }
-
-        .vote-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .vote-list li {
-            display: block;
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
-            color: #495057;
-            font-size: 0.95em;
-        }
-
-        .vote-list li:last-child {
-            border-bottom: none;
-        }
-
         .voted-badge {
             display: inline-block;
             background-color: #28a745;
@@ -391,38 +319,6 @@ if (isset($_SESSION['user_id'])) {
             font-size: 0.9em;
             margin-top: 10px;
         }
-
-        /* Progress bar styling */
-        .vote-progress-container {
-            margin-top: 6px;
-            background-color: #e9ecef;
-            border-radius: 10px;
-            height: 8px;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .vote-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-            border-radius: 10px;
-            transition: width 0.6s ease;
-        }
-
-        .vote-count-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-
-        .vote-percentage {
-            color: #6c757d;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-
-        
     </style>
 </body>
 
